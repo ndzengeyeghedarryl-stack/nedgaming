@@ -4,7 +4,7 @@ import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Package, Clock, CheckCircle, ShoppingBag, Download, HardDrive, FileArchive, Loader2 } from 'lucide-react';
+import { ArrowLeft, Package, Clock, CheckCircle, ShoppingBag, Download, HardDrive, ExternalLink, CloudDownload, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +19,7 @@ interface OrderItem {
     imageUrl: string;
     category: string;
     downloadUrl: string;
+    downloadLink: string;
     fileSize: string;
     version: string;
   };
@@ -39,6 +40,16 @@ const statusConfig: Record<string, { label: string; color: string; icon: typeof 
   confirmed: { label: 'Confirmé', color: 'bg-[#00ff87]/20 text-[#00ff87] border-[#00ff87]/30', icon: CheckCircle },
   delivered: { label: 'Livré', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: CheckCircle },
 };
+
+function getDownloadProvider(link: string): { name: string; color: string; icon: string } {
+  if (link.includes('mediafire.com')) {
+    return { name: 'MediaFire', color: 'from-blue-500/20 to-blue-900/20 border-blue-500/30', icon: '🔵' };
+  }
+  if (link.includes('mega.nz')) {
+    return { name: 'Mega', color: 'from-red-500/20 to-red-900/20 border-red-500/30', icon: '🔴' };
+  }
+  return { name: 'Lien direct', color: 'from-green-500/20 to-green-900/20 border-green-500/30', icon: '🟢' };
+}
 
 export default function OrdersPage() {
   const { user, setPage } = useStore();
@@ -70,22 +81,34 @@ export default function OrdersPage() {
     }
   };
 
-  const handleDownload = async (gameId: string, gameTitle: string) => {
-    if (!user) {
-      toast({
-        title: 'Connexion requise',
-        description: 'Veuillez vous connecter pour télécharger',
-        variant: 'destructive',
+  const handleExternalDownload = (gameTitle: string, downloadLink: string, gameId: string) => {
+    setDownloadingIds(prev => new Set(prev).add(gameId));
+
+    // Open the external link in a new tab
+    window.open(downloadLink, '_blank', 'noopener,noreferrer');
+
+    toast({
+      title: 'Lien de téléchargement ouvert !',
+      description: `${gameTitle} - Le lien MediaFire/Mega s'est ouvert dans un nouvel onglet`,
+    });
+
+    // Remove downloading state after 2 seconds
+    setTimeout(() => {
+      setDownloadingIds(prev => {
+        const next = new Set(prev);
+        next.delete(gameId);
+        return next;
       });
-      setPage('login');
-      return;
-    }
+    }, 2000);
+  };
+
+  const handleDirectDownload = async (gameId: string, gameTitle: string) => {
+    if (!user) return;
 
     setDownloadingIds(prev => new Set(prev).add(gameId));
 
     try {
       const res = await fetch(`/api/download/${gameId}?userId=${user.id}`);
-
       if (!res.ok) {
         const data = await res.json();
         toast({
@@ -96,22 +119,16 @@ export default function OrdersPage() {
         return;
       }
 
-      // Get the blob from response
       const blob = await res.blob();
-
-      // Create download link
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-
-      // Get filename from Content-Disposition header
       const contentDisposition = res.headers.get('Content-Disposition');
       let filename = `${gameTitle.replace(/[^a-zA-Z0-9]/g, '_')}_Setup.zip`;
       if (contentDisposition) {
         const match = contentDisposition.match(/filename="?(.+?)"?$/);
         if (match) filename = match[1];
       }
-
       a.download = filename;
       document.body.appendChild(a);
       a.click();
@@ -137,12 +154,11 @@ export default function OrdersPage() {
     }
   };
 
-  // Collect all purchased games across all orders for the "Mes jeux" section
+  // Collect all purchased games
   const allPurchasedGames = orders
     .filter(o => o.status === 'confirmed' || o.status === 'delivered')
     .flatMap(order => order.items);
 
-  // Deduplicate by gameId
   const uniquePurchasedGames = Array.from(
     new Map(allPurchasedGames.map(item => [item.game.id, item])).values()
   );
@@ -193,7 +209,7 @@ export default function OrdersPage() {
           <h1 className="text-3xl md:text-4xl font-bold text-white">
             Mes <span className="text-[#00ff87]">jeux</span> & commandes
           </h1>
-          <p className="text-gray-400 mt-1">Téléchargez vos jeux achetés et suivez vos commandes</p>
+          <p className="text-gray-400 mt-1">Téléchargez vos jeux achetés via MediaFire ou Mega</p>
         </motion.div>
 
         {/* === MES JEUX TELECHARGEABLES === */}
@@ -206,79 +222,104 @@ export default function OrdersPage() {
           >
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 rounded-lg bg-[#00ff87]/10 border border-[#00ff87]/20">
-                <Download className="h-5 w-5 text-[#00ff87]" />
+                <CloudDownload className="h-5 w-5 text-[#00ff87]" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Mes jeux disponibles</h2>
-                <p className="text-gray-500 text-sm">{uniquePurchasedGames.length} jeu(x) acheté(s) - Cliquez pour télécharger</p>
+                <h2 className="text-xl font-bold text-white">Mes jeux disponibles au téléchargement</h2>
+                <p className="text-gray-500 text-sm">{uniquePurchasedGames.length} jeu(x) acheté(s) - Cliquez pour télécharger via MediaFire ou Mega</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {uniquePurchasedGames.map((item, i) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.05 * i }}
-                >
-                  <Card className="bg-[#1a1a2e]/80 border-[#00ff87]/10 hover:border-[#00ff87]/30 transition-all group overflow-hidden">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br from-[#7c3aed]/30 to-[#1a1a2e] flex-shrink-0">
-                          <img
-                            src={item.game.imageUrl}
-                            alt={item.game.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-white font-semibold text-sm truncate group-hover:text-[#00ff87] transition-colors">
-                            {item.game.title}
-                          </h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-[#00ff87]/10 text-[#00ff87] border-[#00ff87]/20">
-                              {item.game.category}
-                            </Badge>
+              {uniquePurchasedGames.map((item, i) => {
+                const provider = getDownloadProvider(item.game.downloadLink || '');
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05 * i }}
+                  >
+                    <Card className="bg-[#1a1a2e]/80 border-[#00ff87]/10 hover:border-[#00ff87]/30 transition-all group overflow-hidden">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-16 h-20 rounded-lg overflow-hidden bg-gradient-to-br from-[#7c3aed]/30 to-[#1a1a2e] flex-shrink-0">
+                            <img
+                              src={item.game.imageUrl}
+                              alt={item.game.title}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
                           </div>
-                          <div className="flex items-center gap-3 mt-2 text-gray-500 text-xs">
-                            <span className="flex items-center gap-1">
-                              <HardDrive className="h-3 w-3" />
-                              {item.game.fileSize || 'N/A'}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <FileArchive className="h-3 w-3" />
-                              v{item.game.version || '1.0'}
-                            </span>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-white font-semibold text-sm truncate group-hover:text-[#00ff87] transition-colors">
+                              {item.game.title}
+                            </h3>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-[#00ff87]/10 text-[#00ff87] border-[#00ff87]/20">
+                                {item.game.category}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-3 mt-2 text-gray-500 text-xs">
+                              <span className="flex items-center gap-1">
+                                <HardDrive className="h-3 w-3" />
+                                {item.game.fileSize || 'N/A'}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <Button
-                        className="w-full mt-3 bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a] font-semibold cursor-pointer"
-                        size="sm"
-                        disabled={downloadingIds.has(item.gameId)}
-                        onClick={() => handleDownload(item.gameId, item.game.title)}
-                      >
-                        {downloadingIds.has(item.gameId) ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Téléchargement...
-                          </>
+                        {/* Provider Badge */}
+                        <div className={`mt-3 mb-3 p-2 rounded-lg bg-gradient-to-r ${provider.color} border flex items-center gap-2`}>
+                          <span className="text-base">{provider.icon}</span>
+                          <span className="text-xs text-white font-medium">Télécharger via {provider.name}</span>
+                          <ExternalLink className="h-3 w-3 text-white/60 ml-auto" />
+                        </div>
+
+                        {/* External Download Button */}
+                        {item.game.downloadLink ? (
+                          <Button
+                            className="w-full bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a] font-semibold cursor-pointer"
+                            size="sm"
+                            disabled={downloadingIds.has(item.gameId)}
+                            onClick={() => handleExternalDownload(item.game.title, item.game.downloadLink, item.gameId)}
+                          >
+                            {downloadingIds.has(item.gameId) ? (
+                              <>
+                                <ExternalLink className="mr-2 h-4 w-4 animate-pulse" />
+                                Ouverture du lien...
+                              </>
+                            ) : (
+                              <>
+                                <CloudDownload className="mr-2 h-4 w-4" />
+                                Télécharger sur {provider.name}
+                              </>
+                            )}
+                          </Button>
                         ) : (
-                          <>
+                          <Button
+                            className="w-full bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a] font-semibold cursor-pointer"
+                            size="sm"
+                            disabled={downloadingIds.has(item.gameId)}
+                            onClick={() => handleDirectDownload(item.gameId, item.game.title)}
+                          >
                             <Download className="mr-2 h-4 w-4" />
-                            Télécharger le jeu
-                          </>
+                            Télécharger
+                          </Button>
                         )}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+
+                        {/* Security notice */}
+                        <div className="flex items-center gap-1.5 mt-2 text-gray-600 text-[10px]">
+                          <ShieldCheck className="h-3 w-3 text-[#00ff87]" />
+                          <span>Lien sécurisé - Achat vérifié</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.div>
         )}
@@ -295,7 +336,7 @@ export default function OrdersPage() {
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">Historique des commandes</h2>
-              <p className="text-gray-500 text-sm">Détails de toutes vos transactions</p>
+              <p className="text-gray-500 text-sm">Détails de toutes vos transactions Mobile Money</p>
             </div>
           </div>
 
@@ -367,48 +408,50 @@ export default function OrdersPage() {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-2">
-                          {order.items.map((item) => (
-                            <div
-                              key={item.id}
-                              className="flex items-center gap-3 p-2 rounded-lg bg-[#0f0f0f]/30"
-                            >
-                              <div className="w-10 h-10 rounded overflow-hidden bg-gradient-to-br from-[#7c3aed]/30 to-[#1a1a2e] flex-shrink-0">
-                                <img
-                                  src={item.game.imageUrl}
-                                  alt={item.game.title}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                  }}
-                                />
+                          {order.items.map((item) => {
+                            const provider = getDownloadProvider(item.game.downloadLink || '');
+                            return (
+                              <div
+                                key={item.id}
+                                className="flex items-center gap-3 p-3 rounded-lg bg-[#0f0f0f]/30"
+                              >
+                                <div className="w-12 h-14 rounded overflow-hidden bg-gradient-to-br from-[#7c3aed]/30 to-[#1a1a2e] flex-shrink-0">
+                                  <img
+                                    src={item.game.imageUrl}
+                                    alt={item.game.title}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).style.display = 'none';
+                                    }}
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-white text-sm font-medium truncate">{item.game.title}</p>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-gray-500 text-xs">{item.game.fileSize}</span>
+                                    <span className="text-gray-600 text-xs">•</span>
+                                    <span className="text-xs text-blue-400/70">{provider.name}</span>
+                                  </div>
+                                </div>
+                                <span className="text-gray-400 text-sm flex-shrink-0 hidden sm:block">
+                                  {item.price.toLocaleString('fr-FR')} FCFA
+                                </span>
+                                {(order.status === 'confirmed' || order.status === 'delivered') && item.game.downloadLink && (
+                                  <Button
+                                    size="sm"
+                                    className="bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a] font-semibold text-xs flex-shrink-0 cursor-pointer"
+                                    onClick={() => handleExternalDownload(item.game.title, item.game.downloadLink, item.gameId)}
+                                  >
+                                    <ExternalLink className="h-3 w-3 mr-1" />
+                                    {provider.name}
+                                  </Button>
+                                )}
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-white text-sm truncate">{item.game.title}</p>
-                                <p className="text-gray-500 text-xs">{item.game.fileSize || ''}</p>
-                              </div>
-                              <span className="text-gray-400 text-sm flex-shrink-0">
-                                {item.price.toLocaleString('fr-FR')} FCFA
-                              </span>
-                              {(order.status === 'confirmed' || order.status === 'delivered') && (
-                                <Button
-                                  size="sm"
-                                  className="bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a] font-semibold text-xs flex-shrink-0 cursor-pointer"
-                                  disabled={downloadingIds.has(item.gameId)}
-                                  onClick={() => handleDownload(item.gameId, item.game.title)}
-                                >
-                                  {downloadingIds.has(item.gameId) ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                  ) : (
-                                    <Download className="h-3 w-3 mr-1" />
-                                  )}
-                                  {downloadingIds.has(item.gameId) ? '...' : 'ZIP'}
-                                </Button>
-                              )}
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                         <div className="mt-3 pt-3 border-t border-white/5 flex items-center gap-2 text-gray-500 text-xs">
-                          <span>Téléphone: {order.phone}</span>
+                          <span>Paiement Mobile Money: {order.phone}</span>
                         </div>
                       </CardContent>
                     </Card>

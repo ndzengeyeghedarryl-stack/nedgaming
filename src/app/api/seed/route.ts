@@ -4,11 +4,12 @@ import { db } from '@/lib/db';
 const gamesData = [
   {
     title: 'Grand Theft Auto V',
-    description: 'Explorez le monde ouvert de Los Santos dans cette aventure criminelle épique. Jouez avec trois protagonistes uniques et vivez une histoire immersive remplie d\'action, de conduite et de liberté totale dans un monde ouvert exceptionnel.',
+    description: 'Explorez le monde ouvert de Los Santos dans cette aventure criminelle épique. Jouez avec trois protagonistes uniques — Michael, Franklin et Trevor — et vivez une histoire immersive remplie d\'action, de conduite et de liberté totale dans un monde ouvert exceptionnel. Plus de 100 heures de gameplay avec le mode en ligne GTA Online inclus.',
     price: 15000,
     imageUrl: '/games/gta-v.png',
     downloadUrl: '/downloads/gta-v.zip',
-    fileSize: '45.2 GB',
+    downloadLink: 'https://www.mediafire.com/file/gta5_premium_edition_pc/file',
+    fileSize: '94.5 GB',
     version: '1.0.8',
     category: 'Action',
     developer: 'Rockstar Games',
@@ -17,10 +18,11 @@ const gamesData = [
   },
   {
     title: 'Call of Duty: Modern Warfare III',
-    description: 'Engagez-vous dans le conflit mondial le plus intense. Campagne solo captivante, mode multijoueur compétitif et le fameux mode Zombies vous attendent dans ce FPS incontournable.',
+    description: 'Engagez-vous dans le conflit mondial le plus intense. Campagne solo captivante avec des missions en salle obscure, mode multijoueur compétitif avec 16 cartes mythiques remastérisées, et le fameux mode Zombies en monde ouvert. L\'expérience FPS la plus complète de la franchise.',
     price: 25000,
     imageUrl: '/games/cod-mw3.png',
     downloadUrl: '/downloads/cod-mw3.zip',
+    downloadLink: 'https://www.mediafire.com/file/cod_mw3_full_pc/file',
     fileSize: '78.5 GB',
     version: '1.0.3',
     category: 'Action',
@@ -30,10 +32,11 @@ const gamesData = [
   },
   {
     title: 'Halo Infinite',
-    description: 'Le légendaire Master Chief revient dans sa plus grande aventure. Explorez un monde ouvert de science-fiction, combattez les ennemis Banished et découvrez le mystère du Halo.',
+    description: 'Le légendaire Master Chief revient dans sa plus grande aventure. Explorez un monde ouvert de science-fiction Zeta Halo, combattez les ennemis Banished avec de nouvelles armes et équipements, et découvrez le mystère du Halo. Mode multijoueur free-to-play inclus avec des saisons de contenu régulières.',
     price: 20000,
     imageUrl: '/games/halo-infinite.png',
     downloadUrl: '/downloads/halo-infinite.zip',
+    downloadLink: 'https://mega.nz/file/halo_infinite_pc#abc123',
     fileSize: '52.8 GB',
     version: '1.0.5',
     category: 'Action',
@@ -43,10 +46,11 @@ const gamesData = [
   },
   {
     title: 'Elden Ring',
-    description: 'Un RPG en monde ouvert créé par Hidetaka Miyazaki et George R.R. Martin. Explorez les Terres Intermédiaires, affrontez des ennemis redoutables et découvrez les secrets de l\'Anneau Elden.',
+    description: 'Un RPG en monde ouvert créé par Hidetaka Miyazaki et George R.R. Martin. Explorez les Terres Intermédiaires, affrontez des ennemis redoutables dans des combats exigeants et découvrez les secrets de l\'Anneau Elden. DLC Shadow of the Erdtree inclus. Plus de 150 boss uniques et un monde vaste à explorer.',
     price: 22000,
     imageUrl: '/games/elden-ring.png',
     downloadUrl: '/downloads/elden-ring.zip',
+    downloadLink: 'https://www.mediafire.com/file/elden_ring_goty_pc/file',
     fileSize: '48.3 GB',
     version: '1.0.2',
     category: 'RPG',
@@ -56,10 +60,11 @@ const gamesData = [
   },
   {
     title: 'Cyberpunk 2077',
-    description: 'Vivez dans la mégalopole de Night City, une ville obsédée par le pouvoir, le style et les modifications corporelles. Incarnez V, un mercenaire hors-la-loi à la recherche d\'un implant unique.',
+    description: 'Vivez dans la mégalopole de Night City, une ville obsédée par le pouvoir, le style et les modifications corporelles. Incarnez V, un mercenaire hors-la-loi à la recherche d\'un implant unique. DLC Phantom Liberty inclus avec Keanu Reeves. Plus de 100 heures de contenu avec des fins multiples.',
     price: 18000,
     imageUrl: '/games/cyberpunk-2077.png',
     downloadUrl: '/downloads/cyberpunk-2077.zip',
+    downloadLink: 'https://mega.nz/file/cyberpunk2077_ue#xyz789',
     fileSize: '65.1 GB',
     version: '2.1.0',
     category: 'RPG',
@@ -69,10 +74,11 @@ const gamesData = [
   },
   {
     title: 'The Witcher 3: Wild Hunt',
-    description: 'Incarnant le sorceleur Geralt de Riv, partez à la recherche de Ciri, poursuivie par la Chasse Sauvage. Un RPG à monde ouvert avec des quêtes mémorables et des choix moraux.',
+    description: 'Incarnant le sorceleur Geralt de Riv, partez à la recherche de Ciri, poursuivie par la Chasse Sauvage. Un RPG à monde ouvert avec des quêtes mémorables et des choix moraux. Éditions complètes avec tous les DLC Blood and Wine et Hearts of Stone. Plus de 200 heures de contenu.',
     price: 12000,
     imageUrl: '/games/witcher-3.png',
     downloadUrl: '/downloads/witcher-3.zip',
+    downloadLink: 'https://www.mediafire.com/file/witcher3_complete_edition/file',
     fileSize: '42.7 GB',
     version: '4.0.4',
     category: 'RPG',
@@ -82,10 +88,11 @@ const gamesData = [
   },
   {
     title: 'EA Sports FC 24',
-    description: 'Le football comme vous ne l\'avez jamais vu. Avec la technologie HyperMotion V et des licences exclusives, vivez le beau jeu dans le simulateur de football le plus réaliste.',
+    description: 'Le football comme vous ne l\'avez jamais vu. Avec la technologie HyperMotion V et des licences exclusives, vivez le beau jeu dans le simulateur de football le plus réaliste. Modes Ultimate Team, Career Mode, Pro Clubs et VOLTA. Plus de 19 000 joueurs licenciés.',
     price: 20000,
     imageUrl: '/games/fc-24.png',
     downloadUrl: '/downloads/fc-24.zip',
+    downloadLink: 'https://www.mediafire.com/file/ea_fc24_pc_full/file',
     fileSize: '55.3 GB',
     version: '1.0.1',
     category: 'Sport',
@@ -95,10 +102,11 @@ const gamesData = [
   },
   {
     title: 'NBA 2K24',
-    description: 'Prenez le terrain avec les plus grandes stars du basket. Modes de jeu variés, graphismes époustouflants et gameplay ultra-réaliste pour l\'expérience basket ultime.',
+    description: 'Prenez le terrain avec les plus grandes stars du basket. Modes de jeu variés dont MyCareer, MyTeam et MyNBA, graphismes époustouflants et gameplay ultra-réaliste pour l\'expérience basket ultime. Saison NBA 2023-2024 complète avec tous les effectifs mis à jour.',
     price: 18000,
     imageUrl: '/games/nba-2k24.png',
     downloadUrl: '/downloads/nba-2k24.zip',
+    downloadLink: 'https://mega.nz/file/nba2k24_pc#def456',
     fileSize: '62.4 GB',
     version: '1.0.0',
     category: 'Sport',
@@ -108,10 +116,11 @@ const gamesData = [
   },
   {
     title: 'Assassin\'s Creed Mirage',
-    description: 'Retour aux sources de la franchise. Incarnez Basim dans le Bagdad du 9ème siècle. Infiltration, parkour et assassinats dans un monde ouvert magnifique et authentique.',
+    description: 'Retour aux sources de la franchise. Incarnez Basim dans le Bagdad du 9ème siècle. Infiltration, parkour et assassinats dans un monde ouvert magnifique et authentique. Un jeu plus compact et focalisé sur l\'essentiel de la série, avec un système de combat retravaillé.',
     price: 20000,
     imageUrl: '/games/ac-mirage.png',
     downloadUrl: '/downloads/ac-mirage.zip',
+    downloadLink: 'https://www.mediafire.com/file/ac_mirage_pc_full/file',
     fileSize: '38.9 GB',
     version: '1.0.6',
     category: 'Aventure',
@@ -121,10 +130,11 @@ const gamesData = [
   },
   {
     title: 'God of War Ragnarök',
-    description: 'Kratos et Atreus affrontent le Ragnarök dans cette suite épique. Combattez des dieux nordiques, explorez les neuf royaumes et vivez une histoire émouvante père-fils.',
+    description: 'Kratos et Atreus affrontent le Ragnarök dans cette suite épique. Combattez des dieux nordiques comme Thor et Odin, explorez les neuf royaumes et vivez une histoire émouvante père-fils. Système de combat amélioré avec de nouvelles armes et capacités runiques spectaculaires.',
     price: 22000,
     imageUrl: '/games/god-of-war-ragnarok.png',
     downloadUrl: '/downloads/god-of-war-ragnarok.zip',
+    downloadLink: 'https://mega.nz/file/gow_ragnarok_pc#ghi789',
     fileSize: '71.2 GB',
     version: '1.0.1',
     category: 'Aventure',
@@ -134,10 +144,11 @@ const gamesData = [
   },
   {
     title: 'Age of Empires IV',
-    description: 'Bâtissez votre empire à travers les âges. Gérez vos ressources, construisez vos armées et dominez vos ennemis dans ce jeu de stratégie en temps réel référence.',
+    description: 'Bâtissez votre empire à travers les âges. Gérez vos ressources, construisez vos armées et dominez vos ennemis dans ce jeu de stratégie en temps réel référence. 14 civilisations jouables, campagnes historiques documentaires et mode multijoueur compétitif.',
     price: 15000,
     imageUrl: '/games/aoe-iv.png',
     downloadUrl: '/downloads/aoe-iv.zip',
+    downloadLink: 'https://www.mediafire.com/file/aoe4_anniversary_edition/file',
     fileSize: '35.6 GB',
     version: '1.0.9',
     category: 'Stratégie',
@@ -147,10 +158,11 @@ const gamesData = [
   },
   {
     title: 'Civilization VI',
-    description: 'Conduisez votre civilisation de l\'Âge de Pierre à l\'Ère de l\'Information. Explorez, étendez vos territoires, développez votre culture et dominez le monde.',
+    description: 'Conduisez votre civilisation de l\'Âge de Pierre à l\'Ère de l\'Information. Explorez, étendez vos territoires, développez votre culture et dominez le monde. Édition complète avec tous les DLC Gathering Storm et Rise and Fall. Plus de 50 civilisations jouables.',
     price: 12000,
     imageUrl: '/games/civ-vi.png',
     downloadUrl: '/downloads/civ-vi.zip',
+    downloadLink: 'https://mega.nz/file/civ6_complete_pc#jkl012',
     fileSize: '28.4 GB',
     version: '1.0.12',
     category: 'Stratégie',
@@ -160,10 +172,11 @@ const gamesData = [
   },
   {
     title: 'Red Dead Redemption 2',
-    description: 'Vivez l\'histoire de Arthur Morgan et de la bande de Van der Linde dans l\'Amérique sauvage de 1899. Un chef-d\'œuvre de narration dans un monde ouvert époustouflant.',
+    description: 'Vivez l\'histoire de Arthur Morgan et de la bande de Van der Linde dans l\'Amérique sauvage de 1899. Un chef-d\'œuvre de narration dans un monde ouvert époustouflant. Mode Red Dead Online inclus. Plus de 100 heures de contenu avec des graphismes photoréalistes.',
     price: 16000,
     imageUrl: '/games/rdr2.png',
     downloadUrl: '/downloads/rdr2.zip',
+    downloadLink: 'https://www.mediafire.com/file/rdr2_ultimate_edition_pc/file',
     fileSize: '82.5 GB',
     version: '1.0.4',
     category: 'Aventure',
@@ -173,10 +186,11 @@ const gamesData = [
   },
   {
     title: 'FIFA 24 Legacy Edition',
-    description: 'Profitez du football avec les modes de jeu classiques. Gérez votre club, jouez en ligne et revivez les plus grands moments du football mondial.',
+    description: 'Profitez du football avec les modes de jeu classiques. Gérez votre club en mode Carrière, jouez en ligne en mode Ultimate Team et revivez les plus grands moments du football mondial. Mises à jour des effectifs 2024 et ligues licenciées incluses.',
     price: 14000,
     imageUrl: '/games/fifa-24.png',
     downloadUrl: '/downloads/fifa-24.zip',
+    downloadLink: 'https://www.mediafire.com/file/fifa24_legacy_pc/file',
     fileSize: '48.7 GB',
     version: '1.0.0',
     category: 'Sport',
@@ -191,27 +205,26 @@ export async function GET() {
     const existingGames = await db.game.count();
 
     if (existingGames > 0) {
-      // Update existing games with downloadUrl if they don't have one
+      // Update existing games with downloadLink if they don't have one
       const games = await db.game.findMany();
       for (const game of games) {
-        if (!game.downloadUrl) {
-          const slug = game.imageUrl.split('/').pop()?.replace('.png', '') || '';
-          const matchingData = gamesData.find(g => g.imageUrl.endsWith(`${slug}.png`));
-          if (matchingData) {
-            await db.game.update({
-              where: { id: game.id },
-              data: {
-                downloadUrl: matchingData.downloadUrl,
-                fileSize: matchingData.fileSize,
-                version: matchingData.version,
-              },
-            });
-          }
+        const slug = game.imageUrl.split('/').pop()?.replace('.png', '') || '';
+        const matchingData = gamesData.find(g => g.imageUrl.endsWith(`${slug}.png`));
+        if (matchingData && !game.downloadLink) {
+          await db.game.update({
+            where: { id: game.id },
+            data: {
+              downloadUrl: matchingData.downloadUrl,
+              downloadLink: matchingData.downloadLink,
+              fileSize: matchingData.fileSize,
+              version: matchingData.version,
+            },
+          });
         }
       }
 
       return NextResponse.json({
-        message: `${existingGames} jeux existent déjà dans la base de données (URLs de téléchargement mises à jour)`,
+        message: `${existingGames} jeux existent déjà (liens MediaFire/Mega mis à jour)`,
         count: existingGames,
       });
     }

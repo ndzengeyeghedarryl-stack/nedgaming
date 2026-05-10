@@ -18,6 +18,7 @@ export interface Game {
   price: number;
   imageUrl: string;
   downloadUrl: string;
+  downloadLink: string;
   fileSize: string;
   version: string;
   category: string;

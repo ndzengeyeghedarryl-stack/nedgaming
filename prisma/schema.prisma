@@ -19,21 +19,22 @@ model User {
 }
 
 model Game {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  price       Float
-  imageUrl    String
-  downloadUrl String   @default("")
-  fileSize    String   @default("0 MB")
-  version     String   @default("1.0")
-  category    String
-  developer   String
-  rating      Float    @default(0)
-  featured    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  orderItems  OrderItem[]
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  price        Float
+  imageUrl     String
+  downloadUrl  String   @default("")
+  downloadLink String   @default("")
+  fileSize     String   @default("0 MB")
+  version      String   @default("1.0")
+  category     String
+  developer    String
+  rating       Float    @default(0)
+  featured     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  orderItems   OrderItem[]
 }
 
 model Order {

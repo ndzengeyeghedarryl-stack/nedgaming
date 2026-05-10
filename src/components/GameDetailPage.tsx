@@ -4,7 +4,7 @@ import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Star, ShoppingCart, ArrowLeft, Download, Shield, Clock, HardDrive, FileArchive, Loader2, CheckCircle } from 'lucide-react';
+import { Star, ShoppingCart, ArrowLeft, Download, Shield, Clock, HardDrive, CloudDownload, ExternalLink, CheckCircle, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
@@ -34,6 +34,16 @@ const categoryColors: Record<string, string> = {
   Stratégie: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
 };
 
+function getDownloadProvider(link: string): { name: string; color: string; icon: string; bgColor: string } {
+  if (link.includes('mediafire.com')) {
+    return { name: 'MediaFire', color: 'text-blue-400', icon: '🔵', bgColor: 'bg-blue-500/10 border-blue-500/20' };
+  }
+  if (link.includes('mega.nz')) {
+    return { name: 'Mega', color: 'text-red-400', icon: '🔴', bgColor: 'bg-red-500/10 border-red-500/20' };
+  }
+  return { name: 'Lien direct', color: 'text-green-400', icon: '🟢', bgColor: 'bg-green-500/10 border-green-500/20' };
+}
+
 export default function GameDetailPage() {
   const { selectedGame, setPage, addToCart, cart, user } = useStore();
   const { toast } = useToast();
@@ -41,72 +51,35 @@ export default function GameDetailPage() {
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
-    if (user && selectedGame) {
-      checkPurchase();
-    }
+    if (!user || !selectedGame) return;
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const res = await fetch(`/api/purchases?userId=${user.id}&gameId=${selectedGame.id}`);
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setPurchased(data.purchased);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    check();
+    return () => { cancelled = true; };
   }, [user, selectedGame]);
 
-  const checkPurchase = async () => {
-    if (!user || !selectedGame) return;
-    try {
-      const res = await fetch(`/api/purchases?userId=${user.id}&gameId=${selectedGame.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setPurchased(data.purchased);
-      }
-    } catch {
-      // ignore
-    }
-  };
-
-  const handleDownload = async () => {
-    if (!user || !selectedGame) return;
+  const handleExternalDownload = () => {
+    if (!selectedGame || !selectedGame.downloadLink) return;
 
     setDownloading(true);
-    try {
-      const res = await fetch(`/api/download/${selectedGame.id}?userId=${user.id}`);
+    window.open(selectedGame.downloadLink, '_blank', 'noopener,noreferrer');
 
-      if (!res.ok) {
-        const data = await res.json();
-        toast({
-          title: 'Erreur',
-          description: data.error || 'Téléchargement impossible',
-          variant: 'destructive',
-        });
-        return;
-      }
+    toast({
+      title: 'Lien de téléchargement ouvert !',
+      description: `${selectedGame.title} - Le lien s'est ouvert dans un nouvel onglet`,
+    });
 
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-
-      const contentDisposition = res.headers.get('Content-Disposition');
-      let filename = `${selectedGame.title.replace(/[^a-zA-Z0-9]/g, '_')}_Setup.zip`;
-      if (contentDisposition) {
-        const match = contentDisposition.match(/filename="?(.+?)"?$/);
-        if (match) filename = match[1];
-      }
-
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-
-      toast({
-        title: 'Téléchargement démarré !',
-        description: `${selectedGame.title} est en cours de téléchargement`,
-      });
-    } catch {
-      toast({
-        title: 'Erreur',
-        description: 'Erreur lors du téléchargement',
-        variant: 'destructive',
-      });
-    } finally {
-      setDownloading(false);
-    }
+    setTimeout(() => setDownloading(false), 2000);
   };
 
   if (!selectedGame) {
@@ -128,6 +101,7 @@ export default function GameDetailPage() {
   const game = selectedGame;
   const isInCart = cart.some((item) => item.game.id === game.id);
   const gradientClass = gameGradients[game.imageUrl.split('/').pop() || ''] || 'from-purple-900 via-blue-900 to-gray-900';
+  const provider = getDownloadProvider(game.downloadLink || '');
 
   const handleAddToCart = () => {
     addToCart(game);
@@ -244,14 +218,14 @@ export default function GameDetailPage() {
             {/* Download Info */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="text-center p-3 rounded-lg bg-[#1a1a2e]/30 border border-white/5">
-                <Download className="h-5 w-5 text-[#00ff87] mx-auto mb-1" />
-                <span className="text-xs text-gray-400 block">Téléchargement</span>
-                <span className="text-xs text-white font-medium">Direct</span>
+                <CloudDownload className="h-5 w-5 text-[#00ff87] mx-auto mb-1" />
+                <span className="text-xs text-gray-400 block">Source</span>
+                <span className="text-xs text-white font-medium">{provider.name}</span>
               </div>
               <div className="text-center p-3 rounded-lg bg-[#1a1a2e]/30 border border-white/5">
                 <Shield className="h-5 w-5 text-[#00ff87] mx-auto mb-1" />
-                <span className="text-xs text-gray-400 block">Clé officielle</span>
-                <span className="text-xs text-white font-medium">Validée</span>
+                <span className="text-xs text-gray-400 block">Sécurisé</span>
+                <span className="text-xs text-white font-medium">100%</span>
               </div>
               <div className="text-center p-3 rounded-lg bg-[#1a1a2e]/30 border border-white/5">
                 <HardDrive className="h-5 w-5 text-[#00ff87] mx-auto mb-1" />
@@ -259,7 +233,7 @@ export default function GameDetailPage() {
                 <span className="text-xs text-white font-medium">{game.fileSize || 'N/A'}</span>
               </div>
               <div className="text-center p-3 rounded-lg bg-[#1a1a2e]/30 border border-white/5">
-                <FileArchive className="h-5 w-5 text-[#00ff87] mx-auto mb-1" />
+                <Clock className="h-5 w-5 text-[#00ff87] mx-auto mb-1" />
                 <span className="text-xs text-gray-400 block">Version</span>
                 <span className="text-xs text-white font-medium">v{game.version || '1.0'}</span>
               </div>
@@ -277,30 +251,41 @@ export default function GameDetailPage() {
 
                 {purchased ? (
                   <div className="space-y-3">
+                    {/* Provider Badge */}
+                    <div className={`p-3 rounded-lg border ${provider.bgColor} flex items-center gap-3`}>
+                      <span className="text-xl">{provider.icon}</span>
+                      <div className="flex-1">
+                        <p className="text-white text-sm font-medium">Télécharger via {provider.name}</p>
+                        <p className="text-gray-500 text-xs">Lien sécurisé - Achat vérifié</p>
+                      </div>
+                      <ExternalLink className="h-4 w-4 text-white/40" />
+                    </div>
+
                     <Button
                       size="lg"
                       disabled={downloading}
-                      onClick={handleDownload}
+                      onClick={handleExternalDownload}
                       className="w-full bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a] font-bold py-6 text-lg cursor-pointer"
                     >
                       {downloading ? (
                         <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          Téléchargement en cours...
+                          <ExternalLink className="mr-2 h-5 w-5 animate-pulse" />
+                          Ouverture du lien...
                         </>
                       ) : (
                         <>
-                          <Download className="mr-2 h-5 w-5" />
-                          Télécharger le jeu (ZIP)
+                          <CloudDownload className="mr-2 h-5 w-5" />
+                          Télécharger sur {provider.name}
                         </>
                       )}
                     </Button>
+
                     <div className="flex items-center justify-center gap-2 text-gray-500 text-sm">
                       <CheckCircle className="h-4 w-4 text-[#00ff87]" />
                       <span>Vous avez acheté ce jeu - Téléchargement illimité</span>
                     </div>
                     <div className="text-center text-gray-600 text-xs">
-                      Le fichier ZIP contient l&apos;installateur du jeu prêt à être exécuté
+                      Le lien vous redirigera vers {provider.name} pour télécharger le jeu complet prêt à installer
                     </div>
                   </div>
                 ) : (
@@ -328,8 +313,11 @@ export default function GameDetailPage() {
                         Voir le panier
                       </Button>
                     )}
-                    <div className="text-center text-gray-600 text-xs">
-                      Après achat, vous pourrez télécharger le jeu immédiatement
+                    {/* Show what provider will be used */}
+                    <div className={`p-2.5 rounded-lg border ${provider.bgColor} flex items-center gap-2`}>
+                      <span className="text-sm">{provider.icon}</span>
+                      <span className="text-xs text-gray-400">Après achat, téléchargement via</span>
+                      <span className={`text-xs font-medium ${provider.color}`}>{provider.name}</span>
                     </div>
                   </div>
                 )}
