@@ -4,9 +4,10 @@ import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Star, ShoppingCart, ArrowLeft, Download, Shield, Clock } from 'lucide-react';
+import { Star, ShoppingCart, ArrowLeft, Download, Shield, Clock, HardDrive, FileArchive, Loader2, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
 
 const gameGradients: Record<string, string> = {
   'gta-v.png': 'from-green-900 via-blue-900 to-gray-900',
@@ -34,8 +35,79 @@ const categoryColors: Record<string, string> = {
 };
 
 export default function GameDetailPage() {
-  const { selectedGame, setPage, addToCart, cart } = useStore();
+  const { selectedGame, setPage, addToCart, cart, user } = useStore();
   const { toast } = useToast();
+  const [purchased, setPurchased] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
+  useEffect(() => {
+    if (user && selectedGame) {
+      checkPurchase();
+    }
+  }, [user, selectedGame]);
+
+  const checkPurchase = async () => {
+    if (!user || !selectedGame) return;
+    try {
+      const res = await fetch(`/api/purchases?userId=${user.id}&gameId=${selectedGame.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPurchased(data.purchased);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!user || !selectedGame) return;
+
+    setDownloading(true);
+    try {
+      const res = await fetch(`/api/download/${selectedGame.id}?userId=${user.id}`);
+
+      if (!res.ok) {
+        const data = await res.json();
+        toast({
+          title: 'Erreur',
+          description: data.error || 'Téléchargement impossible',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+
+      const contentDisposition = res.headers.get('Content-Disposition');
+      let filename = `${selectedGame.title.replace(/[^a-zA-Z0-9]/g, '_')}_Setup.zip`;
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="?(.+?)"?$/);
+        if (match) filename = match[1];
+      }
+
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: 'Téléchargement démarré !',
+        description: `${selectedGame.title} est en cours de téléchargement`,
+      });
+    } catch {
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors du téléchargement',
+        variant: 'destructive',
+      });
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   if (!selectedGame) {
     return (
@@ -119,6 +191,14 @@ export default function GameDetailPage() {
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f0f] via-transparent to-transparent" />
+              {purchased && (
+                <div className="absolute top-4 right-4">
+                  <Badge className="bg-[#00ff87] text-[#0f0f0f] px-3 py-1 text-sm font-semibold">
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Acheté
+                  </Badge>
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -139,7 +219,7 @@ export default function GameDetailPage() {
                 </Badge>
                 {game.featured && (
                   <Badge className="bg-[#00ff87]/20 text-[#00ff87] border-[#00ff87]/30" variant="outline">
-                    ⭐ Vedette
+                    Vedette
                   </Badge>
                 )}
               </div>
@@ -161,23 +241,31 @@ export default function GameDetailPage() {
               <p className="text-gray-400 leading-relaxed">{game.description}</p>
             </div>
 
-            {/* Features */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* Download Info */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="text-center p-3 rounded-lg bg-[#1a1a2e]/30 border border-white/5">
                 <Download className="h-5 w-5 text-[#00ff87] mx-auto mb-1" />
-                <span className="text-xs text-gray-400">Téléchargement</span>
+                <span className="text-xs text-gray-400 block">Téléchargement</span>
+                <span className="text-xs text-white font-medium">Direct</span>
               </div>
               <div className="text-center p-3 rounded-lg bg-[#1a1a2e]/30 border border-white/5">
                 <Shield className="h-5 w-5 text-[#00ff87] mx-auto mb-1" />
-                <span className="text-xs text-gray-400">Clé officielle</span>
+                <span className="text-xs text-gray-400 block">Clé officielle</span>
+                <span className="text-xs text-white font-medium">Validée</span>
               </div>
               <div className="text-center p-3 rounded-lg bg-[#1a1a2e]/30 border border-white/5">
-                <Clock className="h-5 w-5 text-[#00ff87] mx-auto mb-1" />
-                <span className="text-xs text-gray-400">Livraison instant.</span>
+                <HardDrive className="h-5 w-5 text-[#00ff87] mx-auto mb-1" />
+                <span className="text-xs text-gray-400 block">Taille</span>
+                <span className="text-xs text-white font-medium">{game.fileSize || 'N/A'}</span>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-[#1a1a2e]/30 border border-white/5">
+                <FileArchive className="h-5 w-5 text-[#00ff87] mx-auto mb-1" />
+                <span className="text-xs text-gray-400 block">Version</span>
+                <span className="text-xs text-white font-medium">v{game.version || '1.0'}</span>
               </div>
             </div>
 
-            {/* Price and Buy */}
+            {/* Price and Buy / Download */}
             <Card className="bg-[#1a1a2e]/80 border-[#00ff87]/20 neon-glow">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -186,28 +274,64 @@ export default function GameDetailPage() {
                     {game.price.toLocaleString('fr-FR')} <span className="text-lg font-normal text-gray-400">FCFA</span>
                   </span>
                 </div>
-                <Button
-                  size="lg"
-                  disabled={isInCart}
-                  onClick={handleAddToCart}
-                  className={`w-full font-bold py-6 text-lg cursor-pointer ${
-                    isInCart
-                      ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                      : 'bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a]'
-                  }`}
-                >
-                  <ShoppingCart className="mr-2 h-5 w-5" />
-                  {isInCart ? 'Déjà dans le panier' : 'Ajouter au panier'}
-                </Button>
-                {isInCart && (
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => setPage('cart')}
-                    className="w-full mt-3 border-[#00ff87]/30 text-[#00ff87] hover:bg-[#00ff87]/10 cursor-pointer"
-                  >
-                    Voir le panier
-                  </Button>
+
+                {purchased ? (
+                  <div className="space-y-3">
+                    <Button
+                      size="lg"
+                      disabled={downloading}
+                      onClick={handleDownload}
+                      className="w-full bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a] font-bold py-6 text-lg cursor-pointer"
+                    >
+                      {downloading ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Téléchargement en cours...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="mr-2 h-5 w-5" />
+                          Télécharger le jeu (ZIP)
+                        </>
+                      )}
+                    </Button>
+                    <div className="flex items-center justify-center gap-2 text-gray-500 text-sm">
+                      <CheckCircle className="h-4 w-4 text-[#00ff87]" />
+                      <span>Vous avez acheté ce jeu - Téléchargement illimité</span>
+                    </div>
+                    <div className="text-center text-gray-600 text-xs">
+                      Le fichier ZIP contient l&apos;installateur du jeu prêt à être exécuté
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <Button
+                      size="lg"
+                      disabled={isInCart}
+                      onClick={handleAddToCart}
+                      className={`w-full font-bold py-6 text-lg cursor-pointer ${
+                        isInCart
+                          ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                          : 'bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a]'
+                      }`}
+                    >
+                      <ShoppingCart className="mr-2 h-5 w-5" />
+                      {isInCart ? 'Déjà dans le panier' : 'Ajouter au panier'}
+                    </Button>
+                    {isInCart && (
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => setPage('cart')}
+                        className="w-full border-[#00ff87]/30 text-[#00ff87] hover:bg-[#00ff87]/10 cursor-pointer"
+                      >
+                        Voir le panier
+                      </Button>
+                    )}
+                    <div className="text-center text-gray-600 text-xs">
+                      Après achat, vous pourrez télécharger le jeu immédiatement
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
