@@ -2,7 +2,7 @@
 
 import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
-import { Gamepad2, ShoppingCart, User, LogOut, Package, Home, Grid3X3, Menu, X } from 'lucide-react';
+import { Gamepad2, ShoppingCart, User, LogOut, Package, Home, Grid3X3, Menu, X, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,6 +18,7 @@ export default function Navbar() {
     { label: 'Jeux', page: 'catalog' as const, icon: Grid3X3 },
     { label: 'Mon Panier', page: 'cart' as const, icon: ShoppingCart },
     { label: 'Mes Commandes', page: 'orders' as const, icon: Package },
+    { label: 'Admin', page: 'admin' as const, icon: Settings },
   ];
 
   return (

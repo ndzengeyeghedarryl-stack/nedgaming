@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 
-export type PageType = 'home' | 'register' | 'login' | 'catalog' | 'game-detail' | 'cart' | 'checkout' | 'orders';
+export type PageType = 'home' | 'register' | 'login' | 'catalog' | 'game-detail' | 'cart' | 'checkout' | 'orders' | 'admin';
 
 export interface User {
   id: string;

@@ -12,6 +12,7 @@ import GameDetailPage from '@/components/GameDetailPage';
 import CartPage from '@/components/CartPage';
 import CheckoutPage from '@/components/CheckoutPage';
 import OrdersPage from '@/components/OrdersPage';
+import AdminPage from '@/components/AdminPage';
 import { AnimatePresence, motion } from 'framer-motion';
 
 export default function Home() {
@@ -48,6 +49,8 @@ export default function Home() {
         return <CheckoutPage />;
       case 'orders':
         return <OrdersPage />;
+      case 'admin':
+        return <AdminPage />;
       default:
         return <HomePage />;
     }
