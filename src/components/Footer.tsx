@@ -22,12 +22,20 @@ export default function Footer() {
 
           {/* Links */}
           <div className="space-y-4">
-            <h3 className="text-white font-semibold">Liens rapides</h3>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li>Catalogue de jeux</li>
-              <li>Nouveautés</li>
-              <li>Promotions</li>
-              <li>Support client</li>
+            <h3 className="text-white font-semibold">Paiement Mobile Money</h3>
+            <ul className="space-y-3 text-sm text-gray-400">
+              <li className="flex items-center gap-2">
+                <span className="text-yellow-400 text-base">📱</span>
+                <span>MTN Mobile Money</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-blue-400 text-base">📲</span>
+                <span>Moov Money : +241 66 86 98 05</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-red-400 text-base">💰</span>
+                <span>Airtel Money : +241 76 52 00 18</span>
+              </li>
             </ul>
           </div>
 
@@ -41,7 +49,11 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-[#00ff87]" />
-                +241 77 00 00 00
+                Airtel : +241 76 52 00 18
+              </li>
+              <li className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-[#00ff87]" />
+                Moov : +241 66 86 98 05
               </li>
               <li className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-[#00ff87]" />

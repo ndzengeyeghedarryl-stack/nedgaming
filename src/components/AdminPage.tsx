@@ -53,7 +53,7 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
 
-  const ADMIN_PASSWORD = 'nedgaming2024';
+  const ADMIN_PASSWORD = 'hope2016';
 
   useEffect(() => {
     if (isAuthenticated) {

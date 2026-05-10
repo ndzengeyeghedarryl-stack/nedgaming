@@ -5,15 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Phone, CreditCard, CheckCircle, Loader2, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Phone, CreditCard, CheckCircle, Loader2, ShieldCheck, AlertCircle, Copy } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
 const providers = [
-  { id: 'mtn', name: 'MTN Mobile Money', color: 'from-yellow-500/20 to-yellow-900/20 border-yellow-500/30', icon: '📱' },
-  { id: 'moov', name: 'Moov Money', color: 'from-blue-500/20 to-blue-900/20 border-blue-500/30', icon: '📲' },
-  { id: 'airtel', name: 'Airtel Money', color: 'from-red-500/20 to-red-900/20 border-red-500/30', icon: '💰' },
+  { id: 'mtn', name: 'MTN Mobile Money', color: 'from-yellow-500/20 to-yellow-900/20 border-yellow-500/30', icon: '📱', number: '+241 77 00 00 00' },
+  { id: 'moov', name: 'Moov Money', color: 'from-blue-500/20 to-blue-900/20 border-blue-500/30', icon: '📲', number: '+241 66 86 98 05' },
+  { id: 'airtel', name: 'Airtel Money', color: 'from-red-500/20 to-red-900/20 border-red-500/30', icon: '💰', number: '+241 76 52 00 18' },
 ];
 
 export default function CheckoutPage() {
@@ -26,6 +26,7 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const total = cart.reduce((sum, item) => sum + item.game.price * item.quantity, 0);
+  const selectedProviderData = providers.find(p => p.id === selectedProvider);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -34,6 +35,15 @@ export default function CheckoutPage() {
     if (!selectedProvider) newErrors.provider = 'Veuillez sélectionner un opérateur';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleCopyNumber = (number: string, name: string) => {
+    navigator.clipboard.writeText(number.replace(/\s/g, '')).then(() => {
+      toast({
+        title: 'Numéro copié !',
+        description: `Le numéro ${name} a été copié`,
+      });
+    });
   };
 
   const handleSubmit = async () => {
@@ -103,7 +113,7 @@ export default function CheckoutPage() {
           <div className="p-6 rounded-full bg-[#00ff87]/10 border border-[#00ff87]/20 inline-block">
             <CheckCircle className="h-20 w-20 text-[#00ff87]" />
           </div>
-          <h2 className="text-3xl font-bold text-white">Paiement réussi ! 🎉</h2>
+          <h2 className="text-3xl font-bold text-white">Paiement réussi !</h2>
           <p className="text-gray-400">
             Votre commande a été confirmée. Vous recevrez vos clés de jeu par SMS sur le numéro +241 {phone}.
           </p>
@@ -112,7 +122,7 @@ export default function CheckoutPage() {
               onClick={() => setPage('orders')}
               className="w-full bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a] font-semibold cursor-pointer"
             >
-              Voir mes commandes
+              Voir mes commandes et telecharger
             </Button>
             <Button
               variant="outline"
@@ -170,6 +180,27 @@ export default function CheckoutPage() {
           Paiement <span className="text-[#00ff87]">Mobile Money</span>
         </motion.h1>
 
+        {/* Payment Instructions */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="mb-6 p-4 rounded-xl bg-[#7c3aed]/5 border border-[#7c3aed]/20"
+        >
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-[#7c3aed] flex-shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="text-[#7c3aed] font-medium mb-2">Instructions de paiement</p>
+              <p className="text-gray-400">
+                1. Envoyez <span className="text-white font-semibold">{total.toLocaleString('fr-FR')} FCFA</span> au numéro correspondant à votre opérateur ci-dessous<br />
+                2. Entrez votre numéro de téléphone Mobile Money<br />
+                3. Sélectionnez votre opérateur<br />
+                4. Validez le paiement
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Payment Form */}
           <motion.div
@@ -187,7 +218,7 @@ export default function CheckoutPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Numéro de téléphone</Label>
+                  <Label className="text-gray-300">Votre numéro de téléphone</Label>
                   <div className="flex">
                     <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-white/10 bg-[#0f0f0f] text-gray-400 text-sm">
                       +241
@@ -212,7 +243,7 @@ export default function CheckoutPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {providers.map((provider) => (
                     <button
                       key={provider.id}
@@ -229,12 +260,50 @@ export default function CheckoutPage() {
                       }`}>
                         {provider.name}
                       </div>
+                      {/* Show the payment number */}
+                      <div className={`text-xs mt-2 font-mono ${
+                        selectedProvider === provider.id ? 'text-white/80' : 'text-gray-500'
+                      }`}>
+                        {provider.number}
+                      </div>
                     </button>
                   ))}
                 </div>
                 {errors.provider && <p className="text-red-400 text-xs mt-2">{errors.provider}</p>}
               </CardContent>
             </Card>
+
+            {/* Payment Number Detail */}
+            {selectedProviderData && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Card className={`bg-gradient-to-br ${selectedProviderData.color} border`}>
+                  <CardContent className="p-4">
+                    <p className="text-white text-sm font-medium mb-2">
+                      Envoyez {total.toLocaleString('fr-FR')} FCFA a ce numero :
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <span className="text-white text-xl font-bold font-mono">
+                        {selectedProviderData.number}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleCopyNumber(selectedProviderData.number, selectedProviderData.name)}
+                        className="text-white/60 hover:text-white cursor-pointer"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="text-white/50 text-xs mt-2">
+                      Nom du compte : <span className="text-white/70 font-medium">NED</span>
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
             <div className="flex items-center gap-2 text-gray-500 text-sm p-3 rounded-lg bg-[#1a1a2e]/30">
               <ShieldCheck className="h-4 w-4 text-[#00ff87] flex-shrink-0" />
