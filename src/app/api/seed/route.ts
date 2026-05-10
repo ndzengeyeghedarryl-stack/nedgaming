@@ -8,7 +8,7 @@ const gamesData = [
     price: 15000,
     imageUrl: '/games/gta-v.png',
     downloadUrl: '/downloads/gta-v.zip',
-    downloadLink: 'https://www.mediafire.com/file/gta5_premium_edition_pc/file',
+    downloadLink: '',
     fileSize: '94.5 GB',
     version: '1.0.8',
     category: 'Action',
@@ -22,7 +22,7 @@ const gamesData = [
     price: 25000,
     imageUrl: '/games/cod-mw3.png',
     downloadUrl: '/downloads/cod-mw3.zip',
-    downloadLink: 'https://www.mediafire.com/file/cod_mw3_full_pc/file',
+    downloadLink: '',
     fileSize: '78.5 GB',
     version: '1.0.3',
     category: 'Action',
@@ -36,7 +36,7 @@ const gamesData = [
     price: 20000,
     imageUrl: '/games/halo-infinite.png',
     downloadUrl: '/downloads/halo-infinite.zip',
-    downloadLink: 'https://mega.nz/file/halo_infinite_pc#abc123',
+    downloadLink: '',
     fileSize: '52.8 GB',
     version: '1.0.5',
     category: 'Action',
@@ -50,7 +50,7 @@ const gamesData = [
     price: 22000,
     imageUrl: '/games/elden-ring.png',
     downloadUrl: '/downloads/elden-ring.zip',
-    downloadLink: 'https://www.mediafire.com/file/elden_ring_goty_pc/file',
+    downloadLink: '',
     fileSize: '48.3 GB',
     version: '1.0.2',
     category: 'RPG',
@@ -64,7 +64,7 @@ const gamesData = [
     price: 18000,
     imageUrl: '/games/cyberpunk-2077.png',
     downloadUrl: '/downloads/cyberpunk-2077.zip',
-    downloadLink: 'https://mega.nz/file/cyberpunk2077_ue#xyz789',
+    downloadLink: '',
     fileSize: '65.1 GB',
     version: '2.1.0',
     category: 'RPG',
@@ -78,7 +78,7 @@ const gamesData = [
     price: 12000,
     imageUrl: '/games/witcher-3.png',
     downloadUrl: '/downloads/witcher-3.zip',
-    downloadLink: 'https://www.mediafire.com/file/witcher3_complete_edition/file',
+    downloadLink: '',
     fileSize: '42.7 GB',
     version: '4.0.4',
     category: 'RPG',
@@ -92,7 +92,7 @@ const gamesData = [
     price: 20000,
     imageUrl: '/games/fc-24.png',
     downloadUrl: '/downloads/fc-24.zip',
-    downloadLink: 'https://www.mediafire.com/file/ea_fc24_pc_full/file',
+    downloadLink: '',
     fileSize: '55.3 GB',
     version: '1.0.1',
     category: 'Sport',
@@ -106,7 +106,7 @@ const gamesData = [
     price: 18000,
     imageUrl: '/games/nba-2k24.png',
     downloadUrl: '/downloads/nba-2k24.zip',
-    downloadLink: 'https://mega.nz/file/nba2k24_pc#def456',
+    downloadLink: '',
     fileSize: '62.4 GB',
     version: '1.0.0',
     category: 'Sport',
@@ -120,7 +120,7 @@ const gamesData = [
     price: 20000,
     imageUrl: '/games/ac-mirage.png',
     downloadUrl: '/downloads/ac-mirage.zip',
-    downloadLink: 'https://www.mediafire.com/file/ac_mirage_pc_full/file',
+    downloadLink: '',
     fileSize: '38.9 GB',
     version: '1.0.6',
     category: 'Aventure',
@@ -134,7 +134,7 @@ const gamesData = [
     price: 22000,
     imageUrl: '/games/god-of-war-ragnarok.png',
     downloadUrl: '/downloads/god-of-war-ragnarok.zip',
-    downloadLink: 'https://mega.nz/file/gow_ragnarok_pc#ghi789',
+    downloadLink: '',
     fileSize: '71.2 GB',
     version: '1.0.1',
     category: 'Aventure',
@@ -148,7 +148,7 @@ const gamesData = [
     price: 15000,
     imageUrl: '/games/aoe-iv.png',
     downloadUrl: '/downloads/aoe-iv.zip',
-    downloadLink: 'https://www.mediafire.com/file/aoe4_anniversary_edition/file',
+    downloadLink: '',
     fileSize: '35.6 GB',
     version: '1.0.9',
     category: 'Stratégie',
@@ -162,7 +162,7 @@ const gamesData = [
     price: 12000,
     imageUrl: '/games/civ-vi.png',
     downloadUrl: '/downloads/civ-vi.zip',
-    downloadLink: 'https://mega.nz/file/civ6_complete_pc#jkl012',
+    downloadLink: '',
     fileSize: '28.4 GB',
     version: '1.0.12',
     category: 'Stratégie',
@@ -176,7 +176,7 @@ const gamesData = [
     price: 16000,
     imageUrl: '/games/rdr2.png',
     downloadUrl: '/downloads/rdr2.zip',
-    downloadLink: 'https://www.mediafire.com/file/rdr2_ultimate_edition_pc/file',
+    downloadLink: '',
     fileSize: '82.5 GB',
     version: '1.0.4',
     category: 'Aventure',
@@ -190,7 +190,7 @@ const gamesData = [
     price: 14000,
     imageUrl: '/games/fifa-24.png',
     downloadUrl: '/downloads/fifa-24.zip',
-    downloadLink: 'https://www.mediafire.com/file/fifa24_legacy_pc/file',
+    downloadLink: '',
     fileSize: '48.7 GB',
     version: '1.0.0',
     category: 'Sport',
@@ -205,26 +205,8 @@ export async function GET() {
     const existingGames = await db.game.count();
 
     if (existingGames > 0) {
-      // Update existing games with downloadLink if they don't have one
-      const games = await db.game.findMany();
-      for (const game of games) {
-        const slug = game.imageUrl.split('/').pop()?.replace('.png', '') || '';
-        const matchingData = gamesData.find(g => g.imageUrl.endsWith(`${slug}.png`));
-        if (matchingData && !game.downloadLink) {
-          await db.game.update({
-            where: { id: game.id },
-            data: {
-              downloadUrl: matchingData.downloadUrl,
-              downloadLink: matchingData.downloadLink,
-              fileSize: matchingData.fileSize,
-              version: matchingData.version,
-            },
-          });
-        }
-      }
-
       return NextResponse.json({
-        message: `${existingGames} jeux existent déjà (liens MediaFire/Mega mis à jour)`,
+        message: `${existingGames} jeux existent déjà`,
         count: existingGames,
       });
     }

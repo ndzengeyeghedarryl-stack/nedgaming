@@ -4,7 +4,7 @@ import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Package, Clock, CheckCircle, ShoppingBag, Download, HardDrive, ExternalLink, CloudDownload, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Package, Clock, CheckCircle, ShoppingBag, HardDrive, ExternalLink, ShieldCheck, Magnet, Download, Copy, Info } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -41,14 +41,20 @@ const statusConfig: Record<string, { label: string; color: string; icon: typeof 
   delivered: { label: 'Livré', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: CheckCircle },
 };
 
-function getDownloadProvider(link: string): { name: string; color: string; icon: string } {
-  if (link.includes('mediafire.com')) {
-    return { name: 'MediaFire', color: 'from-blue-500/20 to-blue-900/20 border-blue-500/30', icon: '🔵' };
+function getDownloadType(link: string): { name: string; color: string; bgColor: string; icon: typeof Magnet } {
+  if (link.startsWith('magnet:')) {
+    return { name: 'Magnet Torrent', color: 'text-purple-400', bgColor: 'bg-purple-500/10 border-purple-500/20', icon: Magnet };
   }
-  if (link.includes('mega.nz')) {
-    return { name: 'Mega', color: 'from-red-500/20 to-red-900/20 border-red-500/30', icon: '🔴' };
+  if (link.endsWith('.torrent') || link.includes('.torrent?')) {
+    return { name: 'Fichier Torrent', color: 'text-green-400', bgColor: 'bg-green-500/10 border-green-500/20', icon: Download };
   }
-  return { name: 'Lien direct', color: 'from-green-500/20 to-green-900/20 border-green-500/30', icon: '🟢' };
+  if (link.includes('1337x') || link.includes('thepiratebay') || link.includes('rutracker') || link.includes('torrent')) {
+    return { name: 'Torrent', color: 'text-orange-400', bgColor: 'bg-orange-500/10 border-orange-500/20', icon: Magnet };
+  }
+  if (link) {
+    return { name: 'Lien de telechargement', color: 'text-blue-400', bgColor: 'bg-blue-500/10 border-blue-500/20', icon: ExternalLink };
+  }
+  return { name: 'Non configuré', color: 'text-gray-500', bgColor: 'bg-gray-500/10 border-gray-500/20', icon: Info };
 }
 
 export default function OrdersPage() {
@@ -81,18 +87,22 @@ export default function OrdersPage() {
     }
   };
 
-  const handleExternalDownload = (gameTitle: string, downloadLink: string, gameId: string) => {
+  const handleTorrentDownload = (gameTitle: string, downloadLink: string, gameId: string) => {
     setDownloadingIds(prev => new Set(prev).add(gameId));
 
-    // Open the external link in a new tab
-    window.open(downloadLink, '_blank', 'noopener,noreferrer');
+    if (downloadLink.startsWith('magnet:')) {
+      // For magnet links, open directly (will launch torrent client)
+      window.open(downloadLink, '_self');
+    } else {
+      // For torrent files or torrent site links, open in new tab
+      window.open(downloadLink, '_blank', 'noopener,noreferrer');
+    }
 
     toast({
-      title: 'Lien de téléchargement ouvert !',
-      description: `${gameTitle} - Le lien MediaFire/Mega s'est ouvert dans un nouvel onglet`,
+      title: 'Lien torrent ouvert !',
+      description: `${gameTitle} - Le lien torrent va s'ouvrir dans votre client torrent`,
     });
 
-    // Remove downloading state after 2 seconds
     setTimeout(() => {
       setDownloadingIds(prev => {
         const next = new Set(prev);
@@ -102,56 +112,19 @@ export default function OrdersPage() {
     }, 2000);
   };
 
-  const handleDirectDownload = async (gameId: string, gameTitle: string) => {
-    if (!user) return;
-
-    setDownloadingIds(prev => new Set(prev).add(gameId));
-
-    try {
-      const res = await fetch(`/api/download/${gameId}?userId=${user.id}`);
-      if (!res.ok) {
-        const data = await res.json();
-        toast({
-          title: 'Erreur',
-          description: data.error || 'Téléchargement impossible',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      const contentDisposition = res.headers.get('Content-Disposition');
-      let filename = `${gameTitle.replace(/[^a-zA-Z0-9]/g, '_')}_Setup.zip`;
-      if (contentDisposition) {
-        const match = contentDisposition.match(/filename="?(.+?)"?$/);
-        if (match) filename = match[1];
-      }
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-
+  const handleCopyLink = (gameTitle: string, downloadLink: string) => {
+    navigator.clipboard.writeText(downloadLink).then(() => {
       toast({
-        title: 'Téléchargement démarré !',
-        description: `${gameTitle} est en cours de téléchargement`,
+        title: 'Lien copié !',
+        description: `Le lien torrent de ${gameTitle} a été copié dans le presse-papiers`,
       });
-    } catch {
+    }).catch(() => {
       toast({
         title: 'Erreur',
-        description: 'Erreur lors du téléchargement',
+        description: 'Impossible de copier le lien',
         variant: 'destructive',
       });
-    } finally {
-      setDownloadingIds(prev => {
-        const next = new Set(prev);
-        next.delete(gameId);
-        return next;
-      });
-    }
+    });
   };
 
   // Collect all purchased games
@@ -209,7 +182,7 @@ export default function OrdersPage() {
           <h1 className="text-3xl md:text-4xl font-bold text-white">
             Mes <span className="text-[#00ff87]">jeux</span> & commandes
           </h1>
-          <p className="text-gray-400 mt-1">Téléchargez vos jeux achetés via MediaFire ou Mega</p>
+          <p className="text-gray-400 mt-1">Téléchargez vos jeux achetés via les liens torrent</p>
         </motion.div>
 
         {/* === MES JEUX TELECHARGEABLES === */}
@@ -222,17 +195,19 @@ export default function OrdersPage() {
           >
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 rounded-lg bg-[#00ff87]/10 border border-[#00ff87]/20">
-                <CloudDownload className="h-5 w-5 text-[#00ff87]" />
+                <Magnet className="h-5 w-5 text-[#00ff87]" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Mes jeux disponibles au téléchargement</h2>
-                <p className="text-gray-500 text-sm">{uniquePurchasedGames.length} jeu(x) acheté(s) - Cliquez pour télécharger via MediaFire ou Mega</p>
+                <h2 className="text-xl font-bold text-white">Mes jeux disponibles au telechargement</h2>
+                <p className="text-gray-500 text-sm">{uniquePurchasedGames.length} jeu(x) acheté(s) - Cliquez pour télécharger via torrent</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {uniquePurchasedGames.map((item, i) => {
-                const provider = getDownloadProvider(item.game.downloadLink || '');
+                const dlType = getDownloadType(item.game.downloadLink || '');
+                const TypeIcon = dlType.icon;
+                const hasLink = !!item.game.downloadLink;
                 return (
                   <motion.div
                     key={item.id}
@@ -271,43 +246,52 @@ export default function OrdersPage() {
                           </div>
                         </div>
 
-                        {/* Provider Badge */}
-                        <div className={`mt-3 mb-3 p-2 rounded-lg bg-gradient-to-r ${provider.color} border flex items-center gap-2`}>
-                          <span className="text-base">{provider.icon}</span>
-                          <span className="text-xs text-white font-medium">Télécharger via {provider.name}</span>
-                          <ExternalLink className="h-3 w-3 text-white/60 ml-auto" />
+                        {/* Torrent Type Badge */}
+                        <div className={`mt-3 mb-3 p-2 rounded-lg border ${dlType.bgColor} flex items-center gap-2`}>
+                          <TypeIcon className={`h-4 w-4 ${dlType.color}`} />
+                          <span className="text-xs text-white font-medium">{dlType.name}</span>
+                          {hasLink && item.game.downloadLink.startsWith('magnet:') && (
+                            <Badge variant="outline" className="text-[9px] px-1 py-0 bg-purple-500/10 text-purple-400 border-purple-500/20 ml-auto">
+                              magnet:
+                            </Badge>
+                          )}
                         </div>
 
-                        {/* External Download Button */}
-                        {item.game.downloadLink ? (
-                          <Button
-                            className="w-full bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a] font-semibold cursor-pointer"
-                            size="sm"
-                            disabled={downloadingIds.has(item.gameId)}
-                            onClick={() => handleExternalDownload(item.game.title, item.game.downloadLink, item.gameId)}
-                          >
-                            {downloadingIds.has(item.gameId) ? (
-                              <>
-                                <ExternalLink className="mr-2 h-4 w-4 animate-pulse" />
-                                Ouverture du lien...
-                              </>
-                            ) : (
-                              <>
-                                <CloudDownload className="mr-2 h-4 w-4" />
-                                Télécharger sur {provider.name}
-                              </>
-                            )}
-                          </Button>
+                        {/* Download Buttons */}
+                        {hasLink ? (
+                          <div className="space-y-2">
+                            <Button
+                              className="w-full bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a] font-semibold cursor-pointer"
+                              size="sm"
+                              disabled={downloadingIds.has(item.gameId)}
+                              onClick={() => handleTorrentDownload(item.game.title, item.game.downloadLink, item.gameId)}
+                            >
+                              {downloadingIds.has(item.gameId) ? (
+                                <>
+                                  <Magnet className="mr-2 h-4 w-4 animate-pulse" />
+                                  Ouverture du torrent...
+                                </>
+                              ) : (
+                                <>
+                                  <Magnet className="mr-2 h-4 w-4" />
+                                  Telecharger via torrent
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              className="w-full bg-[#1a1a2e] text-gray-300 hover:text-white border border-white/10 hover:border-white/20 cursor-pointer"
+                              size="sm"
+                              onClick={() => handleCopyLink(item.game.title, item.game.downloadLink)}
+                            >
+                              <Copy className="mr-2 h-3.5 w-3.5" />
+                              Copier le lien torrent
+                            </Button>
+                          </div>
                         ) : (
-                          <Button
-                            className="w-full bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a] font-semibold cursor-pointer"
-                            size="sm"
-                            disabled={downloadingIds.has(item.gameId)}
-                            onClick={() => handleDirectDownload(item.gameId, item.game.title)}
-                          >
-                            <Download className="mr-2 h-4 w-4" />
-                            Télécharger
-                          </Button>
+                          <div className="p-3 rounded-lg bg-yellow-500/5 border border-yellow-500/20 text-center">
+                            <p className="text-yellow-400 text-xs">Lien torrent non configuré</p>
+                            <p className="text-gray-500 text-[10px] mt-0.5">Contactez l&apos;administrateur</p>
+                          </div>
                         )}
 
                         {/* Security notice */}
@@ -409,7 +393,9 @@ export default function OrdersPage() {
                       <CardContent>
                         <div className="space-y-2">
                           {order.items.map((item) => {
-                            const provider = getDownloadProvider(item.game.downloadLink || '');
+                            const dlType = getDownloadType(item.game.downloadLink || '');
+                            const TypeIcon = dlType.icon;
+                            const hasLink = !!item.game.downloadLink;
                             return (
                               <div
                                 key={item.id}
@@ -429,21 +415,34 @@ export default function OrdersPage() {
                                   <p className="text-white text-sm font-medium truncate">{item.game.title}</p>
                                   <div className="flex items-center gap-2 mt-0.5">
                                     <span className="text-gray-500 text-xs">{item.game.fileSize}</span>
-                                    <span className="text-gray-600 text-xs">•</span>
-                                    <span className="text-xs text-blue-400/70">{provider.name}</span>
+                                    <span className="text-gray-600 text-xs">·</span>
+                                    <span className={`text-xs ${dlType.color} flex items-center gap-1`}>
+                                      <TypeIcon className="h-3 w-3" />
+                                      {dlType.name}
+                                    </span>
                                   </div>
                                 </div>
                                 <span className="text-gray-400 text-sm flex-shrink-0 hidden sm:block">
                                   {item.price.toLocaleString('fr-FR')} FCFA
                                 </span>
-                                {(order.status === 'confirmed' || order.status === 'delivered') && item.game.downloadLink && (
+                                {(order.status === 'confirmed' || order.status === 'delivered') && hasLink && (
                                   <Button
                                     size="sm"
                                     className="bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a] font-semibold text-xs flex-shrink-0 cursor-pointer"
-                                    onClick={() => handleExternalDownload(item.game.title, item.game.downloadLink, item.gameId)}
+                                    onClick={() => handleTorrentDownload(item.game.title, item.game.downloadLink, item.gameId)}
                                   >
-                                    <ExternalLink className="h-3 w-3 mr-1" />
-                                    {provider.name}
+                                    <Magnet className="h-3 w-3 mr-1" />
+                                    Torrent
+                                  </Button>
+                                )}
+                                {(order.status === 'confirmed' || order.status === 'delivered') && hasLink && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-gray-400 hover:text-white text-xs flex-shrink-0 cursor-pointer"
+                                    onClick={() => handleCopyLink(item.game.title, item.game.downloadLink)}
+                                  >
+                                    <Copy className="h-3 w-3" />
                                   </Button>
                                 )}
                               </div>

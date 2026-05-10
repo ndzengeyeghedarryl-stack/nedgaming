@@ -4,7 +4,7 @@ import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Star, ShoppingCart, ArrowLeft, Download, Shield, Clock, HardDrive, CloudDownload, ExternalLink, CheckCircle, ShieldCheck } from 'lucide-react';
+import { Star, ShoppingCart, ArrowLeft, Shield, Clock, HardDrive, Magnet, Download, CheckCircle, ShieldCheck, Copy, Info, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
@@ -34,14 +34,20 @@ const categoryColors: Record<string, string> = {
   Stratégie: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
 };
 
-function getDownloadProvider(link: string): { name: string; color: string; icon: string; bgColor: string } {
-  if (link.includes('mediafire.com')) {
-    return { name: 'MediaFire', color: 'text-blue-400', icon: '🔵', bgColor: 'bg-blue-500/10 border-blue-500/20' };
+function getDownloadType(link: string): { name: string; color: string; bgColor: string; icon: typeof Magnet } {
+  if (link.startsWith('magnet:')) {
+    return { name: 'Magnet Torrent', color: 'text-purple-400', bgColor: 'bg-purple-500/10 border-purple-500/20', icon: Magnet };
   }
-  if (link.includes('mega.nz')) {
-    return { name: 'Mega', color: 'text-red-400', icon: '🔴', bgColor: 'bg-red-500/10 border-red-500/20' };
+  if (link.endsWith('.torrent') || link.includes('.torrent?')) {
+    return { name: 'Fichier Torrent', color: 'text-green-400', bgColor: 'bg-green-500/10 border-green-500/20', icon: Download };
   }
-  return { name: 'Lien direct', color: 'text-green-400', icon: '🟢', bgColor: 'bg-green-500/10 border-green-500/20' };
+  if (link.includes('1337x') || link.includes('thepiratebay') || link.includes('rutracker') || link.includes('torrent')) {
+    return { name: 'Torrent', color: 'text-orange-400', bgColor: 'bg-orange-500/10 border-orange-500/20', icon: Magnet };
+  }
+  if (link) {
+    return { name: 'Lien de telechargement', color: 'text-blue-400', bgColor: 'bg-blue-500/10 border-blue-500/20', icon: ExternalLink };
+  }
+  return { name: 'Non configuré', color: 'text-gray-500', bgColor: 'bg-gray-500/10 border-gray-500/20', icon: Info };
 }
 
 export default function GameDetailPage() {
@@ -68,18 +74,39 @@ export default function GameDetailPage() {
     return () => { cancelled = true; };
   }, [user, selectedGame]);
 
-  const handleExternalDownload = () => {
+  const handleTorrentDownload = () => {
     if (!selectedGame || !selectedGame.downloadLink) return;
 
     setDownloading(true);
-    window.open(selectedGame.downloadLink, '_blank', 'noopener,noreferrer');
+
+    if (selectedGame.downloadLink.startsWith('magnet:')) {
+      window.open(selectedGame.downloadLink, '_self');
+    } else {
+      window.open(selectedGame.downloadLink, '_blank', 'noopener,noreferrer');
+    }
 
     toast({
-      title: 'Lien de téléchargement ouvert !',
-      description: `${selectedGame.title} - Le lien s'est ouvert dans un nouvel onglet`,
+      title: 'Lien torrent ouvert !',
+      description: `${selectedGame.title} - Le lien torrent va s'ouvrir dans votre client torrent`,
     });
 
     setTimeout(() => setDownloading(false), 2000);
+  };
+
+  const handleCopyLink = () => {
+    if (!selectedGame || !selectedGame.downloadLink) return;
+    navigator.clipboard.writeText(selectedGame.downloadLink).then(() => {
+      toast({
+        title: 'Lien copié !',
+        description: `Le lien torrent a été copié dans le presse-papiers`,
+      });
+    }).catch(() => {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de copier le lien',
+        variant: 'destructive',
+      });
+    });
   };
 
   if (!selectedGame) {
@@ -101,7 +128,9 @@ export default function GameDetailPage() {
   const game = selectedGame;
   const isInCart = cart.some((item) => item.game.id === game.id);
   const gradientClass = gameGradients[game.imageUrl.split('/').pop() || ''] || 'from-purple-900 via-blue-900 to-gray-900';
-  const provider = getDownloadProvider(game.downloadLink || '');
+  const dlType = getDownloadType(game.downloadLink || '');
+  const TypeIcon = dlType.icon;
+  const hasLink = !!game.downloadLink;
 
   const handleAddToCart = () => {
     addToCart(game);
@@ -218,9 +247,9 @@ export default function GameDetailPage() {
             {/* Download Info */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="text-center p-3 rounded-lg bg-[#1a1a2e]/30 border border-white/5">
-                <CloudDownload className="h-5 w-5 text-[#00ff87] mx-auto mb-1" />
+                <TypeIcon className="h-5 w-5 text-[#00ff87] mx-auto mb-1" />
                 <span className="text-xs text-gray-400 block">Source</span>
-                <span className="text-xs text-white font-medium">{provider.name}</span>
+                <span className="text-xs text-white font-medium">{dlType.name}</span>
               </div>
               <div className="text-center p-3 rounded-lg bg-[#1a1a2e]/30 border border-white/5">
                 <Shield className="h-5 w-5 text-[#00ff87] mx-auto mb-1" />
@@ -251,42 +280,66 @@ export default function GameDetailPage() {
 
                 {purchased ? (
                   <div className="space-y-3">
-                    {/* Provider Badge */}
-                    <div className={`p-3 rounded-lg border ${provider.bgColor} flex items-center gap-3`}>
-                      <span className="text-xl">{provider.icon}</span>
-                      <div className="flex-1">
-                        <p className="text-white text-sm font-medium">Télécharger via {provider.name}</p>
-                        <p className="text-gray-500 text-xs">Lien sécurisé - Achat vérifié</p>
+                    {hasLink ? (
+                      <>
+                        {/* Torrent Type Badge */}
+                        <div className={`p-3 rounded-lg border ${dlType.bgColor} flex items-center gap-3`}>
+                          <TypeIcon className={`h-5 w-5 ${dlType.color}`} />
+                          <div className="flex-1">
+                            <p className="text-white text-sm font-medium">Telecharger via {dlType.name}</p>
+                            <p className="text-gray-500 text-xs">Lien sécurisé - Achat vérifié</p>
+                          </div>
+                          {game.downloadLink.startsWith('magnet:') && (
+                            <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-purple-500/10 text-purple-400 border-purple-500/20">
+                              magnet:
+                            </Badge>
+                          )}
+                        </div>
+
+                        <Button
+                          size="lg"
+                          disabled={downloading}
+                          onClick={handleTorrentDownload}
+                          className="w-full bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a] font-bold py-6 text-lg cursor-pointer"
+                        >
+                          {downloading ? (
+                            <>
+                              <Magnet className="mr-2 h-5 w-5 animate-pulse" />
+                              Ouverture du torrent...
+                            </>
+                          ) : (
+                            <>
+                              <Magnet className="mr-2 h-5 w-5" />
+                              Telecharger via torrent
+                            </>
+                          )}
+                        </Button>
+
+                        <Button
+                          size="lg"
+                          variant="outline"
+                          onClick={handleCopyLink}
+                          className="w-full border-white/10 text-gray-300 hover:text-white hover:border-white/20 cursor-pointer"
+                        >
+                          <Copy className="mr-2 h-5 w-5" />
+                          Copier le lien torrent
+                        </Button>
+
+                        <div className="flex items-center justify-center gap-2 text-gray-500 text-sm">
+                          <CheckCircle className="h-4 w-4 text-[#00ff87]" />
+                          <span>Vous avez acheté ce jeu - Téléchargement illimité</span>
+                        </div>
+                        <div className="text-center text-gray-600 text-xs">
+                          Le lien va ouvrir votre client torrent (qBittorrent, uTorrent, etc.) pour télécharger le jeu complet
+                        </div>
+                      </>
+                    ) : (
+                      <div className="p-4 rounded-lg bg-yellow-500/5 border border-yellow-500/20 text-center">
+                        <Info className="h-6 w-6 text-yellow-400 mx-auto mb-2" />
+                        <p className="text-yellow-400 text-sm font-medium">Lien torrent non configuré</p>
+                        <p className="text-gray-500 text-xs mt-1">Le lien de téléchargement sera bientôt disponible. Contactez l&apos;administrateur.</p>
                       </div>
-                      <ExternalLink className="h-4 w-4 text-white/40" />
-                    </div>
-
-                    <Button
-                      size="lg"
-                      disabled={downloading}
-                      onClick={handleExternalDownload}
-                      className="w-full bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a] font-bold py-6 text-lg cursor-pointer"
-                    >
-                      {downloading ? (
-                        <>
-                          <ExternalLink className="mr-2 h-5 w-5 animate-pulse" />
-                          Ouverture du lien...
-                        </>
-                      ) : (
-                        <>
-                          <CloudDownload className="mr-2 h-5 w-5" />
-                          Télécharger sur {provider.name}
-                        </>
-                      )}
-                    </Button>
-
-                    <div className="flex items-center justify-center gap-2 text-gray-500 text-sm">
-                      <CheckCircle className="h-4 w-4 text-[#00ff87]" />
-                      <span>Vous avez acheté ce jeu - Téléchargement illimité</span>
-                    </div>
-                    <div className="text-center text-gray-600 text-xs">
-                      Le lien vous redirigera vers {provider.name} pour télécharger le jeu complet prêt à installer
-                    </div>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -313,11 +366,11 @@ export default function GameDetailPage() {
                         Voir le panier
                       </Button>
                     )}
-                    {/* Show what provider will be used */}
-                    <div className={`p-2.5 rounded-lg border ${provider.bgColor} flex items-center gap-2`}>
-                      <span className="text-sm">{provider.icon}</span>
+                    {/* Show what download type will be used */}
+                    <div className={`p-2.5 rounded-lg border ${dlType.bgColor} flex items-center gap-2`}>
+                      <TypeIcon className={`h-4 w-4 ${dlType.color}`} />
                       <span className="text-xs text-gray-400">Après achat, téléchargement via</span>
-                      <span className={`text-xs font-medium ${provider.color}`}>{provider.name}</span>
+                      <span className={`text-xs font-medium ${dlType.color}`}>{dlType.name}</span>
                     </div>
                   </div>
                 )}

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Settings, ExternalLink, Save, Link2, HardDrive, Tag, RefreshCw, CheckCircle, AlertCircle, Shield, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Settings, ExternalLink, Save, Link2, HardDrive, Tag, RefreshCw, CheckCircle, AlertCircle, Shield, Magnet, Download, Copy, Info } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -26,20 +26,20 @@ interface AdminGame {
   featured: boolean;
 }
 
-function getDownloadProvider(link: string): { name: string; color: string; icon: string } {
-  if (link.includes('mediafire.com')) {
-    return { name: 'MediaFire', color: 'text-blue-400', icon: 'M' };
+function getDownloadType(link: string): { name: string; color: string; bgColor: string; icon: typeof Magnet } {
+  if (link.startsWith('magnet:')) {
+    return { name: 'Magnet', color: 'text-purple-400', bgColor: 'bg-purple-500/10 border-purple-500/20', icon: Magnet };
   }
-  if (link.includes('mega.nz')) {
-    return { name: 'Mega', color: 'text-red-400', icon: 'M' };
+  if (link.endsWith('.torrent') || link.includes('.torrent?')) {
+    return { name: 'Fichier .torrent', color: 'text-green-400', bgColor: 'bg-green-500/10 border-green-500/20', icon: Download };
   }
-  if (link.includes('drive.google.com')) {
-    return { name: 'Google Drive', color: 'text-green-400', icon: 'G' };
+  if (link.includes('1337x') || link.includes('thepiratebay') || link.includes('rutracker') || link.includes('torrent')) {
+    return { name: 'Site Torrent', color: 'text-orange-400', bgColor: 'bg-orange-500/10 border-orange-500/20', icon: Magnet };
   }
-  if (link.includes('1fichier.com')) {
-    return { name: '1Fichier', color: 'text-yellow-400', icon: '1' };
+  if (link) {
+    return { name: 'Lien', color: 'text-blue-400', bgColor: 'bg-blue-500/10 border-blue-500/20', icon: ExternalLink };
   }
-  return { name: 'Autre', color: 'text-gray-400', icon: '?' };
+  return { name: 'Non configuré', color: 'text-gray-500', bgColor: 'bg-gray-500/10 border-gray-500/20', icon: Info };
 }
 
 export default function AdminPage() {
@@ -156,6 +156,15 @@ export default function AdminPage() {
     }
   };
 
+  const handleCopyLink = (link: string) => {
+    navigator.clipboard.writeText(link).then(() => {
+      toast({
+        title: 'Lien copié !',
+        description: 'Le lien a été copié dans le presse-papiers',
+      });
+    });
+  };
+
   // Login screen
   if (!isAuthenticated) {
     return (
@@ -172,7 +181,7 @@ export default function AdminPage() {
               </div>
               <CardTitle className="text-2xl text-white">Administration</CardTitle>
               <p className="text-gray-400 text-sm mt-2">
-                Entrez le mot de passe administrateur pour gérer les liens de téléchargement
+                Entrez le mot de passe administrateur pour gérer les liens torrent
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -226,7 +235,7 @@ export default function AdminPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Accueil
           </Button>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-[#7c3aed]/10 border border-[#7c3aed]/20">
                 <Settings className="h-6 w-6 text-[#7c3aed]" />
@@ -235,7 +244,7 @@ export default function AdminPage() {
                 <h1 className="text-3xl font-bold text-white">
                   Panneau <span className="text-[#7c3aed]">Admin</span>
                 </h1>
-                <p className="text-gray-400 text-sm">Gérez les liens de téléchargement MediaFire/Mega pour chaque jeu</p>
+                <p className="text-gray-400 text-sm">Gérez les liens torrent pour chaque jeu</p>
               </div>
             </div>
             <Button
@@ -264,26 +273,26 @@ export default function AdminPage() {
           </Card>
           <Card className="bg-[#1a1a2e]/80 border-white/5">
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-blue-400">
-                {games.filter(g => g.downloadLink.includes('mediafire.com')).length}
+              <p className="text-2xl font-bold text-purple-400">
+                {games.filter(g => g.downloadLink && g.downloadLink.startsWith('magnet:')).length}
               </p>
-              <p className="text-gray-500 text-xs">MediaFire</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-[#1a1a2e]/80 border-white/5">
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-red-400">
-                {games.filter(g => g.downloadLink.includes('mega.nz')).length}
-              </p>
-              <p className="text-gray-500 text-xs">Mega</p>
+              <p className="text-gray-500 text-xs">Liens Magnet</p>
             </CardContent>
           </Card>
           <Card className="bg-[#1a1a2e]/80 border-white/5">
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-green-400">
-                {games.filter(g => g.downloadLink && !g.downloadLink.includes('mediafire.com') && !g.downloadLink.includes('mega.nz')).length}
+                {games.filter(g => g.downloadLink && (g.downloadLink.endsWith('.torrent') || g.downloadLink.includes('.torrent?'))).length}
               </p>
-              <p className="text-gray-500 text-xs">Autres</p>
+              <p className="text-gray-500 text-xs">Fichiers .torrent</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-[#1a1a2e]/80 border-white/5">
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-yellow-400">
+                {games.filter(g => !g.downloadLink).length}
+              </p>
+              <p className="text-gray-500 text-xs">Non configurés</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -298,12 +307,11 @@ export default function AdminPage() {
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-[#7c3aed] flex-shrink-0 mt-0.5" />
             <div className="text-sm">
-              <p className="text-[#7c3aed] font-medium mb-1">Comment configurer les liens de telechargement</p>
+              <p className="text-[#7c3aed] font-medium mb-1">Comment configurer les liens torrent</p>
               <p className="text-gray-400">
-                1. Uploadez vos fichiers de jeux sur <span className="text-blue-400">MediaFire</span> ou <span className="text-red-400">Mega</span><br />
-                2. Copiez le lien de partage du fichier<br />
-                3. Collez-le dans le champ &quot;Lien de telechargement&quot; ci-dessous<br />
-                4. Cliquez sur &quot;Sauvegarder&quot; pour mettre a jour
+                <span className="text-purple-400 font-medium">Lien Magnet :</span> Commence par <code className="bg-[#0f0f0f] px-1.5 py-0.5 rounded text-purple-300 text-xs">magnet:?xt=urn:btih:...</code> - Ouvre directement le client torrent<br />
+                <span className="text-green-400 font-medium">Fichier .torrent :</span> Lien vers un fichier <code className="bg-[#0f0f0f] px-1.5 py-0.5 rounded text-green-300 text-xs">.torrent</code> hébergé (ex: sur votre serveur ou un hébergeur)<br />
+                <span className="text-orange-400 font-medium">Site Torrent :</span> Lien vers une page de téléchargement (1337x, ThePirateBay, etc.)
               </p>
             </div>
           </div>
@@ -319,9 +327,11 @@ export default function AdminPage() {
         ) : (
           <div className="space-y-4">
             {games.map((game, i) => {
-              const provider = getDownloadProvider(game.downloadLink);
+              const dlType = getDownloadType(game.downloadLink);
+              const TypeIcon = dlType.icon;
               const isEditing = editingId === game.id;
               const isSaving = savingId === game.id;
+              const hasLink = !!game.downloadLink;
 
               return (
                 <motion.div
@@ -365,15 +375,18 @@ export default function AdminPage() {
                               {/* Edit Form */}
                               <div>
                                 <label className="text-xs text-gray-400 mb-1 block flex items-center gap-1.5">
-                                  <Link2 className="h-3 w-3" />
-                                  Lien de telechargement (MediaFire / Mega / Google Drive / etc.)
+                                  <Magnet className="h-3 w-3" />
+                                  Lien torrent (Magnet / Fichier .torrent / URL)
                                 </label>
                                 <Input
                                   value={editData.downloadLink || ''}
                                   onChange={(e) => setEditData(prev => ({ ...prev, downloadLink: e.target.value }))}
-                                  placeholder="https://www.mediafire.com/file/xxxxx/nom_du_jeu/file"
-                                  className="bg-[#0f0f0f] border-white/10 text-white placeholder-gray-600 text-sm"
+                                  placeholder="magnet:?xt=urn:btih:XXXXXXXXXX... ou https://exemple.com/jeu.torrent"
+                                  className="bg-[#0f0f0f] border-white/10 text-white placeholder-gray-600 text-sm font-mono"
                                 />
+                                <p className="text-gray-600 text-[10px] mt-1">
+                                  Collez ici le lien magnet (magnet:?) ou l&apos;URL vers le fichier .torrent
+                                </p>
                               </div>
                               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                 <div>
@@ -444,35 +457,46 @@ export default function AdminPage() {
                             <div>
                               {/* Display Mode */}
                               <div className="flex items-center gap-2 mb-2">
-                                <div className={`px-2.5 py-1 rounded-md text-xs font-medium ${
-                                  game.downloadLink.includes('mediafire.com')
-                                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                                    : game.downloadLink.includes('mega.nz')
-                                    ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                                    : 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
-                                }`}>
-                                  {provider.name}
+                                <div className={`px-2.5 py-1 rounded-md text-xs font-medium ${dlType.bgColor} flex items-center gap-1.5`}>
+                                  <TypeIcon className={`h-3 w-3 ${dlType.color}`} />
+                                  <span className={dlType.color}>{dlType.name}</span>
                                 </div>
                                 <span className="text-gray-500 text-xs">
                                   {game.fileSize} - v{game.version}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-[#0f0f0f]/50 border border-white/5">
-                                <Link2 className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                                <p className="text-gray-400 text-xs truncate flex-1">
-                                  {game.downloadLink || 'Aucun lien configuré'}
-                                </p>
-                                {game.downloadLink && (
-                                  <a
-                                    href={game.downloadLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-[#7c3aed] hover:text-[#00ff87] transition-colors flex-shrink-0"
+                              {hasLink ? (
+                                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-[#0f0f0f]/50 border border-white/5">
+                                  <Magnet className="h-4 w-4 text-purple-400 flex-shrink-0" />
+                                  <p className="text-gray-400 text-xs truncate flex-1 font-mono">
+                                    {game.downloadLink.length > 80
+                                      ? game.downloadLink.substring(0, 80) + '...'
+                                      : game.downloadLink}
+                                  </p>
+                                  <button
+                                    onClick={() => handleCopyLink(game.downloadLink)}
+                                    className="text-gray-500 hover:text-white transition-colors flex-shrink-0 p-1"
+                                    title="Copier le lien"
                                   >
-                                    <ExternalLink className="h-3.5 w-3.5" />
-                                  </a>
-                                )}
-                              </div>
+                                    <Copy className="h-3.5 w-3.5" />
+                                  </button>
+                                  {!game.downloadLink.startsWith('magnet:') && (
+                                    <a
+                                      href={game.downloadLink}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[#7c3aed] hover:text-[#00ff87] transition-colors flex-shrink-0"
+                                    >
+                                      <ExternalLink className="h-3.5 w-3.5" />
+                                    </a>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-yellow-500/5 border border-yellow-500/10">
+                                  <AlertCircle className="h-4 w-4 text-yellow-400 flex-shrink-0" />
+                                  <p className="text-yellow-400/70 text-xs">Aucun lien torrent configuré - Cliquez sur Modifier pour ajouter un lien</p>
+                                </div>
+                              )}
                               <div className="flex items-center gap-2 mt-3">
                                 <Button
                                   onClick={() => startEditing(game)}
@@ -481,18 +505,12 @@ export default function AdminPage() {
                                   size="sm"
                                 >
                                   <Settings className="mr-2 h-4 w-4" />
-                                  Modifier le lien
+                                  Modifier le lien torrent
                                 </Button>
-                                {game.downloadLink && (
+                                {hasLink && (
                                   <div className="flex items-center gap-1 text-green-400 text-xs">
                                     <CheckCircle className="h-3.5 w-3.5" />
                                     Lien configuré
-                                  </div>
-                                )}
-                                {!game.downloadLink && (
-                                  <div className="flex items-center gap-1 text-yellow-400 text-xs">
-                                    <AlertCircle className="h-3.5 w-3.5" />
-                                    Aucun lien
                                   </div>
                                 )}
                               </div>
