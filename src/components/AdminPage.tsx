@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Settings, ExternalLink, Save, Link2, HardDrive, Tag, RefreshCw, CheckCircle, AlertCircle, Shield, Magnet, Download, Copy, Info } from 'lucide-react';
+import { ArrowLeft, Settings, ExternalLink, Save, Link2, HardDrive, Tag, RefreshCw, CheckCircle, AlertCircle, Shield, Magnet, Download, Copy, Info, Users, LogOut, UserCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +25,17 @@ interface AdminGame {
   rating: number;
   featured: boolean;
 }
+
+interface AdminAccount {
+  name: string;
+  password: string;
+  role: string;
+}
+
+const ADMIN_ACCOUNTS: AdminAccount[] = [
+  { name: 'NED', password: 'hope2016', role: 'Administrateur principal' },
+  { name: 'Admin2', password: 'admin2024', role: 'Administrateur' },
+];
 
 function getDownloadType(link: string): { name: string; color: string; bgColor: string; icon: typeof Magnet } {
   if (link.startsWith('magnet:')) {
@@ -49,11 +60,11 @@ export default function AdminPage() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Record<string, string>>({});
+  const [adminName, setAdminName] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentAdmin, setCurrentAdmin] = useState<AdminAccount | null>(null);
   const { toast } = useToast();
-
-  const ADMIN_PASSWORD = 'hope2016';
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -83,19 +94,44 @@ export default function AdminPage() {
   };
 
   const handleAdminLogin = () => {
-    if (adminPassword === ADMIN_PASSWORD) {
-      setIsAuthenticated(true);
+    if (!adminName.trim()) {
       toast({
-        title: 'Accès administrateur accordé',
-        description: 'Bienvenue dans le panneau d\'administration',
+        title: 'Nom requis',
+        description: 'Veuillez entrer votre nom d\'administrateur',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const found = ADMIN_ACCOUNTS.find(
+      a => a.name.toLowerCase() === adminName.trim().toLowerCase() && a.password === adminPassword
+    );
+
+    if (found) {
+      setIsAuthenticated(true);
+      setCurrentAdmin(found);
+      toast({
+        title: `Bienvenue ${found.name} !`,
+        description: `Accès ${found.role} accordé`,
       });
     } else {
       toast({
-        title: 'Mot de passe incorrect',
-        description: 'Le mot de passe administrateur est invalide',
+        title: 'Identifiants incorrects',
+        description: 'Le nom ou le mot de passe est invalide',
         variant: 'destructive',
       });
     }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setCurrentAdmin(null);
+    setAdminName('');
+    setAdminPassword('');
+    toast({
+      title: 'Déconnecté',
+      description: 'Vous avez été déconnecté du panneau admin',
+    });
   };
 
   const startEditing = (game: AdminGame) => {
@@ -181,12 +217,23 @@ export default function AdminPage() {
               </div>
               <CardTitle className="text-2xl text-white">Administration</CardTitle>
               <p className="text-gray-400 text-sm mt-2">
-                Entrez le mot de passe administrateur pour gérer les liens torrent
+                Connectez-vous avec vos identifiants administrateur
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm text-gray-400 mb-1.5 block">Mot de passe admin</label>
+                <label className="text-sm text-gray-400 mb-1.5 block">Nom d'administrateur</label>
+                <Input
+                  type="text"
+                  value={adminName}
+                  onChange={(e) => setAdminName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
+                  placeholder="Entrez votre nom..."
+                  className="bg-[#0f0f0f] border-white/10 text-white placeholder-gray-600"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-400 mb-1.5 block">Mot de passe</label>
                 <Input
                   type="password"
                   value={adminPassword}
@@ -201,8 +248,33 @@ export default function AdminPage() {
                 className="w-full bg-[#7c3aed] text-white hover:bg-[#6d28d9] font-semibold cursor-pointer"
               >
                 <Shield className="mr-2 h-4 w-4" />
-                Accéder à l&apos;administration
+                Se connecter
               </Button>
+
+              {/* Admin accounts list */}
+              <div className="mt-4 pt-4 border-t border-white/5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Users className="h-4 w-4 text-gray-500" />
+                  <span className="text-gray-500 text-xs font-medium">Comptes administrateurs enregistrés</span>
+                </div>
+                <div className="space-y-2">
+                  {ADMIN_ACCOUNTS.map((admin, i) => (
+                    <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-[#0f0f0f]/50 border border-white/5">
+                      <div className="w-8 h-8 rounded-full bg-[#7c3aed]/20 border border-[#7c3aed]/30 flex items-center justify-center">
+                        <UserCircle className="h-5 w-5 text-[#7c3aed]" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-white text-sm font-medium">{admin.name}</p>
+                        <p className="text-gray-500 text-[10px]">{admin.role}</p>
+                      </div>
+                      <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-[#7c3aed]/10 text-[#7c3aed] border-[#7c3aed]/20">
+                        Admin
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <Button
                 variant="ghost"
                 onClick={() => setPage('home')}
@@ -247,14 +319,30 @@ export default function AdminPage() {
                 <p className="text-gray-400 text-sm">Gérez les liens torrent pour chaque jeu</p>
               </div>
             </div>
-            <Button
-              onClick={fetchGames}
-              variant="outline"
-              className="border-[#7c3aed]/30 text-[#7c3aed] hover:bg-[#7c3aed]/10 cursor-pointer"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Actualiser
-            </Button>
+            <div className="flex items-center gap-3">
+              {/* Current Admin */}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#7c3aed]/10 border border-[#7c3aed]/20">
+                <UserCircle className="h-4 w-4 text-[#7c3aed]" />
+                <span className="text-sm font-medium text-[#7c3aed]">{currentAdmin?.name}</span>
+                <span className="text-[10px] text-[#7c3aed]/60">({currentAdmin?.role})</span>
+              </div>
+              <Button
+                onClick={fetchGames}
+                variant="outline"
+                className="border-[#7c3aed]/30 text-[#7c3aed] hover:bg-[#7c3aed]/10 cursor-pointer"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Actualiser
+              </Button>
+              <Button
+                onClick={handleLogout}
+                variant="ghost"
+                className="text-gray-400 hover:text-red-400 hover:bg-red-400/10 cursor-pointer"
+                title="Déconnexion"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </motion.div>
 
