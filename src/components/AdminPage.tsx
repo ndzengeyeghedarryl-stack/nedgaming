@@ -34,7 +34,7 @@ interface AdminAccount {
 
 const ADMIN_ACCOUNTS: AdminAccount[] = [
   { name: 'NED', password: 'hope2016', role: 'Administrateur principal' },
-  { name: 'Admin2', password: 'admin2024', role: 'Administrateur' },
+  { name: 'Guylione', password: 'aye16pt10', role: 'Administrateur' },
 ];
 
 function getDownloadType(link: string): { name: string; color: string; bgColor: string; icon: typeof Magnet } {
