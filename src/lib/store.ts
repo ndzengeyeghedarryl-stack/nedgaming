@@ -25,6 +25,18 @@ export interface Game {
   developer: string;
   rating: number;
   featured: boolean;
+  minOS: string;
+  minCPU: string;
+  minRAM: string;
+  minGPU: string;
+  minStorage: string;
+  minDirectX: string;
+  recOS: string;
+  recCPU: string;
+  recRAM: string;
+  recGPU: string;
+  recStorage: string;
+  recDirectX: string;
   createdAt: string;
   updatedAt: string;
 }

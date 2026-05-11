@@ -32,6 +32,20 @@ model Game {
   developer    String
   rating       Float    @default(0)
   featured     Boolean  @default(false)
+  // Minimum system requirements
+  minOS        String   @default("")
+  minCPU       String   @default("")
+  minRAM       String   @default("")
+  minGPU       String   @default("")
+  minStorage   String   @default("")
+  minDirectX   String   @default("")
+  // Recommended system requirements
+  recOS        String   @default("")
+  recCPU       String   @default("")
+  recRAM       String   @default("")
+  recGPU       String   @default("")
+  recStorage   String   @default("")
+  recDirectX   String   @default("")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   orderItems   OrderItem[]

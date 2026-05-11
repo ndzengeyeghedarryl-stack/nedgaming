@@ -8,7 +8,7 @@ import { Search, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const categories = ['Tous', 'Action', 'RPG', 'Sport', 'Aventure', 'Stratégie'];
+const categories = ['Tous', 'Combat', 'Sport', 'Guerre', 'Course'];
 
 export default function CatalogPage() {
   const { setPage } = useStore();

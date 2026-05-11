@@ -4,26 +4,37 @@ import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Star, ShoppingCart, ArrowLeft, Shield, Clock, HardDrive, Magnet, Download, CheckCircle, ShieldCheck, Copy, Info, ExternalLink } from 'lucide-react';
+import { Star, ShoppingCart, ArrowLeft, Shield, Clock, HardDrive, Magnet, Download, CheckCircle, ShieldCheck, Copy, Info, ExternalLink, Monitor, Cpu, MemoryStick, Gpu, HardDriveUpload, Layers } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 
 const gameGradients: Record<string, string> = {
-  'gta-v.png': 'from-green-900 via-blue-900 to-gray-900',
+  'naruto-storm-1.png': 'from-orange-900 via-red-900 to-gray-900',
+  'naruto-storm-2.png': 'from-orange-800 via-yellow-900 to-gray-900',
+  'naruto-storm-3.png': 'from-orange-900 via-amber-900 to-gray-900',
+  'naruto-storm-4.png': 'from-yellow-800 via-orange-900 to-gray-900',
+  'naruto-storm-revolution.png': 'from-orange-800 via-purple-900 to-gray-900',
+  'db-xenoverse-1.png': 'from-blue-900 via-yellow-900 to-gray-900',
+  'db-xenoverse-2.png': 'from-blue-800 via-orange-900 to-gray-900',
+  'db-fighterz.png': 'from-orange-900 via-red-800 to-gray-900',
+  'dbz-kakarot.png': 'from-yellow-800 via-blue-900 to-gray-900',
+  'db-breakers.png': 'from-purple-900 via-green-900 to-gray-900',
+  'fifa-19.png': 'from-green-900 via-emerald-900 to-gray-900',
+  'fifa-20.png': 'from-green-800 via-teal-900 to-gray-900',
+  'fifa-21.png': 'from-emerald-900 via-green-800 to-gray-900',
+  'fifa-22.png': 'from-teal-900 via-green-900 to-gray-900',
+  'fifa-23.png': 'from-green-900 via-cyan-900 to-gray-900',
   'cod-mw3.png': 'from-orange-900 via-red-900 to-gray-900',
-  'halo-infinite.png': 'from-green-800 via-cyan-900 to-gray-900',
-  'elden-ring.png': 'from-amber-900 via-yellow-900 to-gray-900',
-  'cyberpunk-2077.png': 'from-yellow-800 via-pink-900 to-gray-900',
-  'witcher-3.png': 'from-red-900 via-gray-800 to-gray-900',
-  'fc-24.png': 'from-green-800 via-emerald-900 to-gray-900',
-  'nba-2k24.png': 'from-orange-900 via-blue-900 to-gray-900',
-  'ac-mirage.png': 'from-indigo-900 via-gray-800 to-gray-900',
-  'god-of-war-ragnarok.png': 'from-blue-900 via-cyan-900 to-gray-900',
-  'aoe-iv.png': 'from-amber-800 via-red-900 to-gray-900',
-  'civ-vi.png': 'from-blue-800 via-purple-900 to-gray-900',
-  'rdr2.png': 'from-orange-900 via-red-900 to-gray-900',
-  'fifa-24.png': 'from-green-800 via-teal-900 to-gray-900',
+  'cod-cold-war.png': 'from-gray-900 via-red-900 to-gray-900',
+  'bf5.png': 'from-green-900 via-gray-800 to-gray-900',
+  'bf2042.png': 'from-blue-900 via-gray-800 to-gray-900',
+  'moh-ab.png': 'from-amber-900 via-gray-800 to-gray-900',
+  'nfs-heat.png': 'from-red-900 via-orange-900 to-gray-900',
+  'nfs-unbound.png': 'from-purple-900 via-yellow-800 to-gray-900',
+  'forza-horizon-5.png': 'from-blue-900 via-orange-800 to-gray-900',
+  'f1-23.png': 'from-red-900 via-blue-900 to-gray-900',
+  'acc.png': 'from-blue-800 via-gray-800 to-gray-900',
 };
 
 const categoryColors: Record<string, string> = {
@@ -32,6 +43,9 @@ const categoryColors: Record<string, string> = {
   Sport: 'bg-green-500/20 text-green-400 border-green-500/30',
   Aventure: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
   Stratégie: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  Combat: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  Guerre: 'bg-red-600/20 text-red-500 border-red-600/30',
+  Course: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
 };
 
 function getDownloadType(link: string): { name: string; color: string; bgColor: string; icon: typeof Magnet } {
@@ -267,6 +281,156 @@ export default function GameDetailPage() {
                 <span className="text-xs text-white font-medium">v{game.version || '1.0'}</span>
               </div>
             </div>
+
+            {/* System Requirements */}
+            {(game.minOS || game.minCPU || game.minRAM || game.minGPU) && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Card className="bg-[#1a1a2e]/50 border-white/5">
+                  <CardContent className="p-6">
+                    <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                      <Monitor className="h-5 w-5 text-[#7c3aed]" />
+                      Configuration requise
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Minimum Requirements */}
+                      <div className="p-4 rounded-xl bg-[#0f0f0f]/60 border border-red-500/10">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="px-2.5 py-1 rounded-md bg-red-500/10 border border-red-500/20">
+                            <span className="text-red-400 text-xs font-semibold">MINIMUM</span>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          {game.minOS && (
+                            <div className="flex items-start gap-3">
+                              <Monitor className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-500 text-[10px] uppercase tracking-wider">Système d'exploitation</p>
+                                <p className="text-gray-300 text-sm">{game.minOS}</p>
+                              </div>
+                            </div>
+                          )}
+                          {game.minCPU && (
+                            <div className="flex items-start gap-3">
+                              <Cpu className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-500 text-[10px] uppercase tracking-wider">Processeur</p>
+                                <p className="text-gray-300 text-sm">{game.minCPU}</p>
+                              </div>
+                            </div>
+                          )}
+                          {game.minRAM && (
+                            <div className="flex items-start gap-3">
+                              <MemoryStick className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-500 text-[10px] uppercase tracking-wider">Mémoire vive (RAM)</p>
+                                <p className="text-gray-300 text-sm">{game.minRAM}</p>
+                              </div>
+                            </div>
+                          )}
+                          {game.minGPU && (
+                            <div className="flex items-start gap-3">
+                              <Gpu className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-500 text-[10px] uppercase tracking-wider">Carte graphique</p>
+                                <p className="text-gray-300 text-sm">{game.minGPU}</p>
+                              </div>
+                            </div>
+                          )}
+                          {game.minStorage && (
+                            <div className="flex items-start gap-3">
+                              <HardDriveUpload className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-500 text-[10px] uppercase tracking-wider">Espace disque</p>
+                                <p className="text-gray-300 text-sm">{game.minStorage}</p>
+                              </div>
+                            </div>
+                          )}
+                          {game.minDirectX && (
+                            <div className="flex items-start gap-3">
+                              <Layers className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-500 text-[10px] uppercase tracking-wider">DirectX</p>
+                                <p className="text-gray-300 text-sm">{game.minDirectX}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Recommended Requirements */}
+                      <div className="p-4 rounded-xl bg-[#0f0f0f]/60 border border-green-500/10">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="px-2.5 py-1 rounded-md bg-green-500/10 border border-green-500/20">
+                            <span className="text-green-400 text-xs font-semibold">RECOMMANDÉE</span>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          {game.recOS && (
+                            <div className="flex items-start gap-3">
+                              <Monitor className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-500 text-[10px] uppercase tracking-wider">Système d'exploitation</p>
+                                <p className="text-gray-300 text-sm">{game.recOS}</p>
+                              </div>
+                            </div>
+                          )}
+                          {game.recCPU && (
+                            <div className="flex items-start gap-3">
+                              <Cpu className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-500 text-[10px] uppercase tracking-wider">Processeur</p>
+                                <p className="text-gray-300 text-sm">{game.recCPU}</p>
+                              </div>
+                            </div>
+                          )}
+                          {game.recRAM && (
+                            <div className="flex items-start gap-3">
+                              <MemoryStick className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-500 text-[10px] uppercase tracking-wider">Mémoire vive (RAM)</p>
+                                <p className="text-gray-300 text-sm">{game.recRAM}</p>
+                              </div>
+                            </div>
+                          )}
+                          {game.recGPU && (
+                            <div className="flex items-start gap-3">
+                              <Gpu className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-500 text-[10px] uppercase tracking-wider">Carte graphique</p>
+                                <p className="text-gray-300 text-sm">{game.recGPU}</p>
+                              </div>
+                            </div>
+                          )}
+                          {game.recStorage && (
+                            <div className="flex items-start gap-3">
+                              <HardDriveUpload className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-500 text-[10px] uppercase tracking-wider">Espace disque</p>
+                                <p className="text-gray-300 text-sm">{game.recStorage}</p>
+                              </div>
+                            </div>
+                          )}
+                          {game.recDirectX && (
+                            <div className="flex items-start gap-3">
+                              <Layers className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-500 text-[10px] uppercase tracking-wider">DirectX</p>
+                                <p className="text-gray-300 text-sm">{game.recDirectX}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
             {/* Price and Buy / Download */}
             <Card className="bg-[#1a1a2e]/80 border-[#00ff87]/20 neon-glow">

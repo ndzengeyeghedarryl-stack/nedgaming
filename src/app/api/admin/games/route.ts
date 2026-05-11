@@ -21,7 +21,7 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { gameId, downloadLink, fileSize, version, price, title, description, category, developer, rating, featured } = body;
+    const { gameId, downloadLink, fileSize, version, price, title, description, category, developer, rating, featured, minOS, minCPU, minRAM, minGPU, minStorage, minDirectX, recOS, recCPU, recRAM, recGPU, recStorage, recDirectX } = body;
 
     if (!gameId) {
       return NextResponse.json(
@@ -52,6 +52,18 @@ export async function PUT(request: NextRequest) {
     if (developer !== undefined) updateData.developer = developer;
     if (rating !== undefined) updateData.rating = rating;
     if (featured !== undefined) updateData.featured = featured;
+    if (minOS !== undefined) updateData.minOS = minOS;
+    if (minCPU !== undefined) updateData.minCPU = minCPU;
+    if (minRAM !== undefined) updateData.minRAM = minRAM;
+    if (minGPU !== undefined) updateData.minGPU = minGPU;
+    if (minStorage !== undefined) updateData.minStorage = minStorage;
+    if (minDirectX !== undefined) updateData.minDirectX = minDirectX;
+    if (recOS !== undefined) updateData.recOS = recOS;
+    if (recCPU !== undefined) updateData.recCPU = recCPU;
+    if (recRAM !== undefined) updateData.recRAM = recRAM;
+    if (recGPU !== undefined) updateData.recGPU = recGPU;
+    if (recStorage !== undefined) updateData.recStorage = recStorage;
+    if (recDirectX !== undefined) updateData.recDirectX = recDirectX;
 
     const updatedGame = await db.game.update({
       where: { id: gameId },

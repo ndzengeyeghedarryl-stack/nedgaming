@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Settings, ExternalLink, Save, Link2, HardDrive, Tag, RefreshCw, CheckCircle, AlertCircle, Shield, Magnet, Download, Copy, Info, Users, LogOut, UserCircle } from 'lucide-react';
+import { ArrowLeft, Settings, ExternalLink, Save, Link2, HardDrive, Tag, RefreshCw, CheckCircle, AlertCircle, Shield, Magnet, Download, Copy, Info, Users, LogOut, UserCircle, Monitor, Cpu, MemoryStick, Gpu, HardDriveUpload, Layers, ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +24,18 @@ interface AdminGame {
   developer: string;
   rating: number;
   featured: boolean;
+  minOS: string;
+  minCPU: string;
+  minRAM: string;
+  minGPU: string;
+  minStorage: string;
+  minDirectX: string;
+  recOS: string;
+  recCPU: string;
+  recRAM: string;
+  recGPU: string;
+  recStorage: string;
+  recDirectX: string;
 }
 
 interface AdminAccount {
@@ -64,6 +76,7 @@ export default function AdminPage() {
   const [adminPassword, setAdminPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentAdmin, setCurrentAdmin] = useState<AdminAccount | null>(null);
+  const [showSysReqs, setShowSysReqs] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -141,6 +154,18 @@ export default function AdminPage() {
       fileSize: game.fileSize,
       version: game.version,
       price: game.price.toString(),
+      minOS: game.minOS || '',
+      minCPU: game.minCPU || '',
+      minRAM: game.minRAM || '',
+      minGPU: game.minGPU || '',
+      minStorage: game.minStorage || '',
+      minDirectX: game.minDirectX || '',
+      recOS: game.recOS || '',
+      recCPU: game.recCPU || '',
+      recRAM: game.recRAM || '',
+      recGPU: game.recGPU || '',
+      recStorage: game.recStorage || '',
+      recDirectX: game.recDirectX || '',
     });
   };
 
@@ -161,6 +186,18 @@ export default function AdminPage() {
           fileSize: editData.fileSize,
           version: editData.version,
           price: parseFloat(editData.price) || undefined,
+          minOS: editData.minOS,
+          minCPU: editData.minCPU,
+          minRAM: editData.minRAM,
+          minGPU: editData.minGPU,
+          minStorage: editData.minStorage,
+          minDirectX: editData.minDirectX,
+          recOS: editData.recOS,
+          recCPU: editData.recCPU,
+          recRAM: editData.recRAM,
+          recGPU: editData.recGPU,
+          recStorage: editData.recStorage,
+          recDirectX: editData.recDirectX,
         }),
       });
 
@@ -460,7 +497,7 @@ export default function AdminPage() {
 
                           {isEditing ? (
                             <div className="space-y-3">
-                              {/* Edit Form */}
+                              {/* Edit Form - Torrent Link */}
                               <div>
                                 <label className="text-xs text-gray-400 mb-1 block flex items-center gap-1.5">
                                   <Magnet className="h-3 w-3" />
@@ -512,6 +549,77 @@ export default function AdminPage() {
                                   />
                                 </div>
                               </div>
+
+                              {/* System Requirements - Minimum */}
+                              <div className="p-3 rounded-lg bg-red-500/5 border border-red-500/10">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className="px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20">
+                                    <span className="text-red-400 text-[10px] font-semibold">CONFIG MINIMUM</span>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <label className="text-[10px] text-gray-500 mb-0.5 block flex items-center gap-1"><Monitor className="h-2.5 w-2.5" /> OS</label>
+                                    <Input value={editData.minOS || ''} onChange={(e) => setEditData(prev => ({ ...prev, minOS: e.target.value }))} placeholder="Windows 10 64-bit" className="bg-[#0f0f0f] border-white/10 text-white placeholder-gray-600 text-xs h-8" />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] text-gray-500 mb-0.5 block flex items-center gap-1"><Cpu className="h-2.5 w-2.5" /> Processeur</label>
+                                    <Input value={editData.minCPU || ''} onChange={(e) => setEditData(prev => ({ ...prev, minCPU: e.target.value }))} placeholder="Intel Core i5-6600" className="bg-[#0f0f0f] border-white/10 text-white placeholder-gray-600 text-xs h-8" />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] text-gray-500 mb-0.5 block flex items-center gap-1"><MemoryStick className="h-2.5 w-2.5" /> RAM</label>
+                                    <Input value={editData.minRAM || ''} onChange={(e) => setEditData(prev => ({ ...prev, minRAM: e.target.value }))} placeholder="8 Go" className="bg-[#0f0f0f] border-white/10 text-white placeholder-gray-600 text-xs h-8" />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] text-gray-500 mb-0.5 block flex items-center gap-1"><Gpu className="h-2.5 w-2.5" /> Carte graphique</label>
+                                    <Input value={editData.minGPU || ''} onChange={(e) => setEditData(prev => ({ ...prev, minGPU: e.target.value }))} placeholder="NVIDIA GTX 1060" className="bg-[#0f0f0f] border-white/10 text-white placeholder-gray-600 text-xs h-8" />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] text-gray-500 mb-0.5 block flex items-center gap-1"><HardDriveUpload className="h-2.5 w-2.5" /> Espace disque</label>
+                                    <Input value={editData.minStorage || ''} onChange={(e) => setEditData(prev => ({ ...prev, minStorage: e.target.value }))} placeholder="70 Go" className="bg-[#0f0f0f] border-white/10 text-white placeholder-gray-600 text-xs h-8" />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] text-gray-500 mb-0.5 block flex items-center gap-1"><Layers className="h-2.5 w-2.5" /> DirectX</label>
+                                    <Input value={editData.minDirectX || ''} onChange={(e) => setEditData(prev => ({ ...prev, minDirectX: e.target.value }))} placeholder="Version 12" className="bg-[#0f0f0f] border-white/10 text-white placeholder-gray-600 text-xs h-8" />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* System Requirements - Recommended */}
+                              <div className="p-3 rounded-lg bg-green-500/5 border border-green-500/10">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className="px-2 py-0.5 rounded bg-green-500/10 border border-green-500/20">
+                                    <span className="text-green-400 text-[10px] font-semibold">CONFIG RECOMMANDÉE</span>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <label className="text-[10px] text-gray-500 mb-0.5 block flex items-center gap-1"><Monitor className="h-2.5 w-2.5" /> OS</label>
+                                    <Input value={editData.recOS || ''} onChange={(e) => setEditData(prev => ({ ...prev, recOS: e.target.value }))} placeholder="Windows 11 64-bit" className="bg-[#0f0f0f] border-white/10 text-white placeholder-gray-600 text-xs h-8" />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] text-gray-500 mb-0.5 block flex items-center gap-1"><Cpu className="h-2.5 w-2.5" /> Processeur</label>
+                                    <Input value={editData.recCPU || ''} onChange={(e) => setEditData(prev => ({ ...prev, recCPU: e.target.value }))} placeholder="Intel Core i7-9700K" className="bg-[#0f0f0f] border-white/10 text-white placeholder-gray-600 text-xs h-8" />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] text-gray-500 mb-0.5 block flex items-center gap-1"><MemoryStick className="h-2.5 w-2.5" /> RAM</label>
+                                    <Input value={editData.recRAM || ''} onChange={(e) => setEditData(prev => ({ ...prev, recRAM: e.target.value }))} placeholder="16 Go" className="bg-[#0f0f0f] border-white/10 text-white placeholder-gray-600 text-xs h-8" />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] text-gray-500 mb-0.5 block flex items-center gap-1"><Gpu className="h-2.5 w-2.5" /> Carte graphique</label>
+                                    <Input value={editData.recGPU || ''} onChange={(e) => setEditData(prev => ({ ...prev, recGPU: e.target.value }))} placeholder="NVIDIA RTX 2060" className="bg-[#0f0f0f] border-white/10 text-white placeholder-gray-600 text-xs h-8" />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] text-gray-500 mb-0.5 block flex items-center gap-1"><HardDriveUpload className="h-2.5 w-2.5" /> Espace disque</label>
+                                    <Input value={editData.recStorage || ''} onChange={(e) => setEditData(prev => ({ ...prev, recStorage: e.target.value }))} placeholder="70 Go SSD" className="bg-[#0f0f0f] border-white/10 text-white placeholder-gray-600 text-xs h-8" />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] text-gray-500 mb-0.5 block flex items-center gap-1"><Layers className="h-2.5 w-2.5" /> DirectX</label>
+                                    <Input value={editData.recDirectX || ''} onChange={(e) => setEditData(prev => ({ ...prev, recDirectX: e.target.value }))} placeholder="Version 12" className="bg-[#0f0f0f] border-white/10 text-white placeholder-gray-600 text-xs h-8" />
+                                  </div>
+                                </div>
+                              </div>
+
                               <div className="flex gap-2">
                                 <Button
                                   onClick={() => saveGame(game.id)}
@@ -593,7 +701,7 @@ export default function AdminPage() {
                                   size="sm"
                                 >
                                   <Settings className="mr-2 h-4 w-4" />
-                                  Modifier le lien torrent
+                                  Modifier
                                 </Button>
                                 {hasLink && (
                                   <div className="flex items-center gap-1 text-green-400 text-xs">
@@ -601,7 +709,50 @@ export default function AdminPage() {
                                     Lien configuré
                                   </div>
                                 )}
+                                {(game.minOS || game.minCPU) && (
+                                  <button
+                                    onClick={() => setShowSysReqs(showSysReqs === game.id ? null : game.id)}
+                                    className="ml-auto flex items-center gap-1 text-gray-500 hover:text-[#7c3aed] text-xs transition-colors cursor-pointer"
+                                  >
+                                    <Monitor className="h-3.5 w-3.5" />
+                                    Config requise
+                                    {showSysReqs === game.id ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                                  </button>
+                                )}
                               </div>
+
+                              {/* System Requirements Preview */}
+                              {showSysReqs === game.id && (game.minOS || game.minCPU) && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2"
+                                >
+                                  <div className="p-2.5 rounded-lg bg-red-500/5 border border-red-500/10">
+                                    <span className="text-red-400 text-[9px] font-semibold uppercase tracking-wider">Minimum</span>
+                                    <div className="mt-1.5 space-y-1">
+                                      {game.minOS && <p className="text-gray-400 text-[11px]"><span className="text-gray-600">OS:</span> {game.minOS}</p>}
+                                      {game.minCPU && <p className="text-gray-400 text-[11px]"><span className="text-gray-600">CPU:</span> {game.minCPU}</p>}
+                                      {game.minRAM && <p className="text-gray-400 text-[11px]"><span className="text-gray-600">RAM:</span> {game.minRAM}</p>}
+                                      {game.minGPU && <p className="text-gray-400 text-[11px]"><span className="text-gray-600">GPU:</span> {game.minGPU}</p>}
+                                      {game.minStorage && <p className="text-gray-400 text-[11px]"><span className="text-gray-600">Disque:</span> {game.minStorage}</p>}
+                                      {game.minDirectX && <p className="text-gray-400 text-[11px]"><span className="text-gray-600">DX:</span> {game.minDirectX}</p>}
+                                    </div>
+                                  </div>
+                                  <div className="p-2.5 rounded-lg bg-green-500/5 border border-green-500/10">
+                                    <span className="text-green-400 text-[9px] font-semibold uppercase tracking-wider">Recommandée</span>
+                                    <div className="mt-1.5 space-y-1">
+                                      {game.recOS && <p className="text-gray-400 text-[11px]"><span className="text-gray-600">OS:</span> {game.recOS}</p>}
+                                      {game.recCPU && <p className="text-gray-400 text-[11px]"><span className="text-gray-600">CPU:</span> {game.recCPU}</p>}
+                                      {game.recRAM && <p className="text-gray-400 text-[11px]"><span className="text-gray-600">RAM:</span> {game.recRAM}</p>}
+                                      {game.recGPU && <p className="text-gray-400 text-[11px]"><span className="text-gray-600">GPU:</span> {game.recGPU}</p>}
+                                      {game.recStorage && <p className="text-gray-400 text-[11px]"><span className="text-gray-600">Disque:</span> {game.recStorage}</p>}
+                                      {game.recDirectX && <p className="text-gray-400 text-[11px]"><span className="text-gray-600">DX:</span> {game.recDirectX}</p>}
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              )}
                             </div>
                           )}
                         </div>
