@@ -87,8 +87,8 @@ export default function CheckoutPage() {
       setSuccess(true);
       clearCart();
       toast({
-        title: 'Commande confirmée !',
-        description: 'Votre paiement Mobile Money a été accepté',
+        title: 'Commande enregistrée !',
+        description: 'Votre paiement est en attente de validation par l\'administrateur',
       });
     } catch {
       toast({
@@ -113,9 +113,9 @@ export default function CheckoutPage() {
           <div className="p-6 rounded-full bg-[#00ff87]/10 border border-[#00ff87]/20 inline-block">
             <CheckCircle className="h-20 w-20 text-[#00ff87]" />
           </div>
-          <h2 className="text-3xl font-bold text-white">Paiement réussi !</h2>
+          <h2 className="text-3xl font-bold text-white">Commande enregistrée !</h2>
           <p className="text-gray-400">
-            Votre commande a été confirmée. Vous recevrez vos clés de jeu par SMS sur le numéro +241 {phone}.
+            Votre commande a été enregistrée. L'administrateur doit vérifier votre paiement Mobile Money avant de débloquer l'accès au téléchargement. Vous recevrez l'accès dès que le paiement sera confirmé.
           </p>
           <div className="space-y-3">
             <Button

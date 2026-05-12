@@ -70,23 +70,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Simulate Mobile Money payment (in real app, integrate with MTN/Moov/Airtel API)
-    // For demo purposes, we always succeed
-    const paymentSuccess = true;
-
-    if (!paymentSuccess) {
-      return NextResponse.json(
-        { error: 'Paiement Mobile Money échoué. Veuillez réessayer.' },
-        { status: 400 }
-      );
-    }
-
+    // Order is created as "pending" - admin must verify payment and confirm manually
     const order = await db.order.create({
       data: {
         userId,
         phone: `+241${phone}`,
         total,
-        status: 'confirmed',
+        status: 'pending',
+        provider: provider || '',
         items: {
           create: orderItems,
         },

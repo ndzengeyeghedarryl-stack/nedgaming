@@ -4,7 +4,7 @@ import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Package, Clock, CheckCircle, ShoppingBag, HardDrive, ExternalLink, ShieldCheck, Magnet, Download, Copy, Info } from 'lucide-react';
+import { ArrowLeft, Package, Clock, CheckCircle, ShoppingBag, HardDrive, ExternalLink, ShieldCheck, Magnet, Download, Copy, Info, XCircle, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -31,14 +31,16 @@ interface Order {
   total: number;
   status: string;
   phone: string;
+  provider: string;
   createdAt: string;
   items: OrderItem[];
 }
 
-const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock }> = {
-  pending: { label: 'En attente', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30', icon: Clock },
-  confirmed: { label: 'Confirmé', color: 'bg-[#00ff87]/20 text-[#00ff87] border-[#00ff87]/30', icon: CheckCircle },
-  delivered: { label: 'Livré', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: CheckCircle },
+const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock; description: string }> = {
+  pending: { label: 'En attente de validation', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30', icon: Clock, description: 'Votre paiement est en cours de verification par l\'administrateur' },
+  confirmed: { label: 'Confirmé', color: 'bg-[#00ff87]/20 text-[#00ff87] border-[#00ff87]/30', icon: CheckCircle, description: 'Paiement verifié - Telechargement debloqué' },
+  rejected: { label: 'Refusé', color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: XCircle, description: 'Le paiement n\'a pas pu etre verifié. Contactez l\'administrateur' },
+  delivered: { label: 'Livré', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: CheckCircle, description: 'Jeu telechargé avec succes' },
 };
 
 function getDownloadType(link: string): { name: string; color: string; bgColor: string; icon: typeof Magnet } {
@@ -91,10 +93,8 @@ export default function OrdersPage() {
     setDownloadingIds(prev => new Set(prev).add(gameId));
 
     if (downloadLink.startsWith('magnet:')) {
-      // For magnet links, open directly (will launch torrent client)
       window.open(downloadLink, '_self');
     } else {
-      // For torrent files or torrent site links, open in new tab
       window.open(downloadLink, '_blank', 'noopener,noreferrer');
     }
 
@@ -127,7 +127,7 @@ export default function OrdersPage() {
     });
   };
 
-  // Collect all purchased games
+  // Only confirmed/delivered games can be downloaded
   const allPurchasedGames = orders
     .filter(o => o.status === 'confirmed' || o.status === 'delivered')
     .flatMap(order => order.items);
@@ -135,6 +135,10 @@ export default function OrdersPage() {
   const uniquePurchasedGames = Array.from(
     new Map(allPurchasedGames.map(item => [item.game.id, item])).values()
   );
+
+  // Count pending orders
+  const pendingOrders = orders.filter(o => o.status === 'pending');
+  const rejectedOrders = orders.filter(o => o.status === 'rejected');
 
   if (!user) {
     return (
@@ -182,8 +186,58 @@ export default function OrdersPage() {
           <h1 className="text-3xl md:text-4xl font-bold text-white">
             Mes <span className="text-[#00ff87]">jeux</span> & commandes
           </h1>
-          <p className="text-gray-400 mt-1">Téléchargez vos jeux achetés via les liens torrent</p>
+          <p className="text-gray-400 mt-1">Téléchargez vos jeux achetés une fois que l'administrateur a confirmé votre paiement</p>
         </motion.div>
+
+        {/* Pending Alert */}
+        {pendingOrders.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/20"
+          >
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-yellow-400 font-medium mb-1">
+                  {pendingOrders.length} commande(s) en attente de validation
+                </p>
+                <p className="text-gray-400 text-sm">
+                  L'administrateur doit vérifier votre paiement Mobile Money avant de débloquer l'accès au téléchargement. Vous serez notifié dès que votre commande sera confirmée.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={fetchOrders}
+                className="text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10 ml-auto cursor-pointer"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Rejected Alert */}
+        {rejectedOrders.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 rounded-xl bg-red-500/5 border border-red-500/20"
+          >
+            <div className="flex items-start gap-3">
+              <XCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-red-400 font-medium mb-1">
+                  {rejectedOrders.length} commande(s) refusée(s)
+                </p>
+                <p className="text-gray-400 text-sm">
+                  Le paiement n'a pas pu être vérifié. Veuillez contacter l'administrateur au +241 76 52 00 18 (Airtel) ou +241 66 86 98 05 (Moov).
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* === MES JEUX TELECHARGEABLES === */}
         {uniquePurchasedGames.length > 0 && (
@@ -199,7 +253,7 @@ export default function OrdersPage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Mes jeux disponibles au telechargement</h2>
-                <p className="text-gray-500 text-sm">{uniquePurchasedGames.length} jeu(x) acheté(s) - Cliquez pour télécharger via torrent</p>
+                <p className="text-gray-500 text-sm">{uniquePurchasedGames.length} jeu(x) debloqué(s) - Cliquez pour télécharger via torrent</p>
               </div>
             </div>
 
@@ -355,6 +409,7 @@ export default function OrdersPage() {
               {orders.map((order, i) => {
                 const status = statusConfig[order.status] || statusConfig.pending;
                 const StatusIcon = status.icon;
+                const isConfirmed = order.status === 'confirmed' || order.status === 'delivered';
                 return (
                   <motion.div
                     key={order.id}
@@ -362,7 +417,10 @@ export default function OrdersPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
                   >
-                    <Card className="bg-[#1a1a2e]/80 border-white/5 overflow-hidden">
+                    <Card className={`bg-[#1a1a2e]/80 border-white/5 overflow-hidden ${
+                      order.status === 'pending' ? 'border-yellow-500/20' : 
+                      order.status === 'rejected' ? 'border-red-500/20' : ''
+                    }`}>
                       <CardHeader className="pb-3">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="space-y-1">
@@ -389,6 +447,19 @@ export default function OrdersPage() {
                             </span>
                           </div>
                         </div>
+                        {/* Status description */}
+                        {order.status === 'pending' && (
+                          <div className="mt-2 p-2 rounded-lg bg-yellow-500/5 border border-yellow-500/10 flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-yellow-400" />
+                            <span className="text-yellow-400 text-xs">{status.description}</span>
+                          </div>
+                        )}
+                        {order.status === 'rejected' && (
+                          <div className="mt-2 p-2 rounded-lg bg-red-500/5 border border-red-500/10 flex items-center gap-2">
+                            <XCircle className="h-4 w-4 text-red-400" />
+                            <span className="text-red-400 text-xs">{status.description}</span>
+                          </div>
+                        )}
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-2">
@@ -425,7 +496,8 @@ export default function OrdersPage() {
                                 <span className="text-gray-400 text-sm flex-shrink-0 hidden sm:block">
                                   {item.price.toLocaleString('fr-FR')} FCFA
                                 </span>
-                                {(order.status === 'confirmed' || order.status === 'delivered') && hasLink && (
+                                {/* Only show download buttons for confirmed/delivered orders */}
+                                {isConfirmed && hasLink && (
                                   <Button
                                     size="sm"
                                     className="bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a] font-semibold text-xs flex-shrink-0 cursor-pointer"
@@ -435,7 +507,7 @@ export default function OrdersPage() {
                                     Torrent
                                   </Button>
                                 )}
-                                {(order.status === 'confirmed' || order.status === 'delivered') && hasLink && (
+                                {isConfirmed && hasLink && (
                                   <Button
                                     size="sm"
                                     variant="ghost"
@@ -445,12 +517,35 @@ export default function OrdersPage() {
                                     <Copy className="h-3 w-3" />
                                   </Button>
                                 )}
+                                {/* Show locked status for pending orders */}
+                                {order.status === 'pending' && (
+                                  <Badge variant="outline" className="text-[10px] px-2 py-1 bg-yellow-500/5 text-yellow-500 border-yellow-500/20 flex-shrink-0">
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    En attente
+                                  </Badge>
+                                )}
+                                {/* Show rejected status */}
+                                {order.status === 'rejected' && (
+                                  <Badge variant="outline" className="text-[10px] px-2 py-1 bg-red-500/5 text-red-500 border-red-500/20 flex-shrink-0">
+                                    <XCircle className="h-3 w-3 mr-1" />
+                                    Refusé
+                                  </Badge>
+                                )}
                               </div>
                             );
                           })}
                         </div>
-                        <div className="mt-3 pt-3 border-t border-white/5 flex items-center gap-2 text-gray-500 text-xs">
+                        <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between gap-2 text-gray-500 text-xs">
                           <span>Paiement Mobile Money: {order.phone}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={fetchOrders}
+                            className="text-gray-500 hover:text-white text-xs cursor-pointer"
+                          >
+                            <RefreshCw className="h-3 w-3 mr-1" />
+                            Actualiser
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Settings, ExternalLink, Save, Link2, HardDrive, Tag, RefreshCw, CheckCircle, AlertCircle, Shield, Magnet, Download, Copy, Info, Users, LogOut, UserCircle, Monitor, Cpu, MemoryStick, Gpu, HardDriveUpload, Layers, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Settings, ExternalLink, Save, Link2, HardDrive, Tag, RefreshCw, CheckCircle, AlertCircle, Shield, Magnet, Download, Copy, Info, Users, LogOut, UserCircle, Monitor, Cpu, MemoryStick, Gpu, HardDriveUpload, Layers, ChevronDown, ChevronUp, Package, XCircle, Clock, Phone, CreditCard, DollarSign } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -65,10 +65,40 @@ function getDownloadType(link: string): { name: string; color: string; bgColor: 
   return { name: 'Non configuré', color: 'text-gray-500', bgColor: 'bg-gray-500/10 border-gray-500/20', icon: Info };
 }
 
+interface AdminOrder {
+  id: string;
+  userId: string;
+  total: number;
+  status: string;
+  phone: string;
+  provider: string;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string | null;
+  };
+  items: {
+    id: string;
+    gameId: string;
+    price: number;
+    game: {
+      id: string;
+      title: string;
+      imageUrl: string;
+      category: string;
+      price: number;
+    };
+  }[];
+}
+
 export default function AdminPage() {
   const { user, setPage } = useStore();
   const [games, setGames] = useState<AdminGame[]>([]);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [ordersLoading, setOrdersLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Record<string, string>>({});
@@ -77,13 +107,17 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentAdmin, setCurrentAdmin] = useState<AdminAccount | null>(null);
   const [showSysReqs, setShowSysReqs] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'games' | 'orders'>('orders');
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchGames();
+      fetchOrders();
     } else {
       setLoading(false);
+      setOrdersLoading(false);
     }
   }, [isAuthenticated]);
 
@@ -103,6 +137,59 @@ export default function AdminPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      setOrdersLoading(true);
+      const res = await fetch('/api/admin/orders');
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(data);
+      }
+    } catch {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les commandes',
+        variant: 'destructive',
+      });
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  const handleConfirmOrder = async (orderId: string, status: 'confirmed' | 'rejected') => {
+    setConfirmingId(orderId);
+    try {
+      const res = await fetch('/api/admin/orders', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, status }),
+      });
+      if (res.ok) {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+        toast({
+          title: status === 'confirmed' ? 'Commande confirmée !' : 'Commande refusée',
+          description: status === 'confirmed'
+            ? 'L\'utilisateur peut maintenant télécharger ses jeux'
+            : 'L\'utilisateur a été notifié du refus',
+        });
+      } else {
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de mettre à jour la commande',
+          variant: 'destructive',
+        });
+      }
+    } catch {
+      toast({
+        title: 'Erreur',
+        description: 'Erreur de connexion',
+        variant: 'destructive',
+      });
+    } finally {
+      setConfirmingId(null);
     }
   };
 
@@ -353,7 +440,7 @@ export default function AdminPage() {
                 <h1 className="text-3xl font-bold text-white">
                   Panneau <span className="text-[#7c3aed]">Admin</span>
                 </h1>
-                <p className="text-gray-400 text-sm">Gérez les liens torrent pour chaque jeu</p>
+                <p className="text-gray-400 text-sm">Gérez les commandes et les liens torrent</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -364,7 +451,7 @@ export default function AdminPage() {
                 <span className="text-[10px] text-[#7c3aed]/60">({currentAdmin?.role})</span>
               </div>
               <Button
-                onClick={fetchGames}
+                onClick={() => { fetchGames(); fetchOrders(); }}
                 variant="outline"
                 className="border-[#7c3aed]/30 text-[#7c3aed] hover:bg-[#7c3aed]/10 cursor-pointer"
               >
@@ -381,15 +468,82 @@ export default function AdminPage() {
               </Button>
             </div>
           </div>
+
+          {/* Tabs */}
+          <div className="flex gap-2 mt-6">
+            <button
+              onClick={() => setActiveTab('orders')}
+              className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 ${
+                activeTab === 'orders'
+                  ? 'bg-[#7c3aed] text-white'
+                  : 'bg-[#1a1a2e]/50 text-gray-400 hover:text-white hover:bg-[#1a1a2e]'
+              }`}
+            >
+              <Package className="h-4 w-4" />
+              Commandes
+              {orders.filter(o => o.status === 'pending').length > 0 && (
+                <span className="bg-yellow-400 text-[#0f0f0f] text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  {orders.filter(o => o.status === 'pending').length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('games')}
+              className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 ${
+                activeTab === 'games'
+                  ? 'bg-[#7c3aed] text-white'
+                  : 'bg-[#1a1a2e]/50 text-gray-400 hover:text-white hover:bg-[#1a1a2e]'
+              }`}
+            >
+              <Settings className="h-4 w-4" />
+              Gestion des jeux
+            </button>
+          </div>
         </motion.div>
 
-        {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8"
-        >
+        {/* Stats - Orders */}
+        {activeTab === 'orders' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8"
+          >
+            <Card className="bg-[#1a1a2e]/80 border-yellow-500/20">
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-bold text-yellow-400">{orders.filter(o => o.status === 'pending').length}</p>
+                <p className="text-gray-500 text-xs">En attente</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-[#1a1a2e]/80 border-[#00ff87]/20">
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-bold text-[#00ff87]">{orders.filter(o => o.status === 'confirmed').length}</p>
+                <p className="text-gray-500 text-xs">Confirmées</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-[#1a1a2e]/80 border-red-500/20">
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-bold text-red-400">{orders.filter(o => o.status === 'rejected').length}</p>
+                <p className="text-gray-500 text-xs">Refusées</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-[#1a1a2e]/80 border-white/5">
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-bold text-white">{orders.reduce((sum, o) => sum + o.total, 0).toLocaleString('fr-FR')}</p>
+                <p className="text-gray-500 text-xs">FCFA total</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Stats - Games */}
+        {activeTab === 'games' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8"
+          >
           <Card className="bg-[#1a1a2e]/80 border-white/5">
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-white">{games.length}</p>
@@ -420,29 +574,186 @@ export default function AdminPage() {
               <p className="text-gray-500 text-xs">Non configurés</p>
             </CardContent>
           </Card>
-        </motion.div>
+          </motion.div>
+        )}
 
-        {/* Info Banner */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="mb-8 p-4 rounded-xl bg-[#7c3aed]/5 border border-[#7c3aed]/20"
-        >
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-[#7c3aed] flex-shrink-0 mt-0.5" />
-            <div className="text-sm">
-              <p className="text-[#7c3aed] font-medium mb-1">Comment configurer les liens torrent</p>
-              <p className="text-gray-400">
-                <span className="text-purple-400 font-medium">Lien Magnet :</span> Commence par <code className="bg-[#0f0f0f] px-1.5 py-0.5 rounded text-purple-300 text-xs">magnet:?xt=urn:btih:...</code> - Ouvre directement le client torrent<br />
-                <span className="text-green-400 font-medium">Fichier .torrent :</span> Lien vers un fichier <code className="bg-[#0f0f0f] px-1.5 py-0.5 rounded text-green-300 text-xs">.torrent</code> hébergé (ex: sur votre serveur ou un hébergeur)<br />
-                <span className="text-orange-400 font-medium">Site Torrent :</span> Lien vers une page de téléchargement (1337x, ThePirateBay, etc.)
-              </p>
+        {/* Orders Tab */}
+        {activeTab === 'orders' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+          >
+            {ordersLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-40 rounded-xl bg-[#1a1a2e]/50 animate-pulse" />
+                ))}
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="text-center py-20 space-y-4">
+                <div className="p-6 rounded-full bg-[#1a1a2e]/50 border border-white/5 inline-block">
+                  <Package className="h-16 w-16 text-gray-500" />
+                </div>
+                <h2 className="text-2xl font-bold text-white">Aucune commande</h2>
+                <p className="text-gray-400">Les nouvelles commandes apparaitront ici</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Pending orders first */}
+                {[...orders.filter(o => o.status === 'pending'), ...orders.filter(o => o.status !== 'pending')].map((order, i) => {
+                  const isPending = order.status === 'pending';
+                  const isConfirmed = order.status === 'confirmed';
+                  const isRejected = order.status === 'rejected';
+                  return (
+                    <motion.div
+                      key={order.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <Card className={`bg-[#1a1a2e]/80 overflow-hidden ${
+                        isPending ? 'border-yellow-500/30 ring-1 ring-yellow-500/10' :
+                        isRejected ? 'border-red-500/20' :
+                        isConfirmed ? 'border-[#00ff87]/20' : 'border-white/5'
+                      }`}>
+                        <CardHeader className="pb-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="space-y-1">
+                              <CardTitle className="text-white text-lg flex items-center gap-2">
+                                Commande #{order.id.slice(-6).toUpperCase()}
+                                {isPending && (
+                                  <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30" variant="outline">
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    En attente
+                                  </Badge>
+                                )}
+                                {isConfirmed && (
+                                  <Badge className="bg-[#00ff87]/20 text-[#00ff87] border-[#00ff87]/30" variant="outline">
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    Confirmé
+                                  </Badge>
+                                )}
+                                {isRejected && (
+                                  <Badge className="bg-red-500/20 text-red-400 border-red-500/30" variant="outline">
+                                    <XCircle className="h-3 w-3 mr-1" />
+                                    Refusé
+                                  </Badge>
+                                )}
+                              </CardTitle>
+                              <p className="text-gray-500 text-sm">
+                                {new Date(order.createdAt).toLocaleDateString('fr-FR', {
+                                  day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+                                })}
+                              </p>
+                            </div>
+                            <span className="text-[#00ff87] font-bold text-xl">
+                              {order.total.toLocaleString('fr-FR')} <span className="text-sm font-normal text-gray-400">FCFA</span>
+                            </span>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          {/* Customer info */}
+                          <div className="p-3 rounded-lg bg-[#0f0f0f]/30 border border-white/5 mb-4">
+                            <p className="text-[#7c3aed] text-xs font-semibold mb-2 uppercase tracking-wider">Informations client</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+                              <div className="flex items-center gap-2">
+                                <UserCircle className="h-4 w-4 text-gray-500" />
+                                <span className="text-white font-medium">{order.user.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Phone className="h-4 w-4 text-gray-500" />
+                                <span className="text-gray-300">{order.phone}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <CreditCard className="h-4 w-4 text-gray-500" />
+                                <span className="text-gray-300 capitalize">{order.provider || 'Non spécifié'}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Games list */}
+                          <div className="space-y-2 mb-4">
+                            {order.items.map((item) => (
+                              <div key={item.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-[#0f0f0f]/20">
+                                <div className="w-10 h-12 rounded overflow-hidden bg-gradient-to-br from-[#7c3aed]/30 to-[#1a1a2e] flex-shrink-0">
+                                  <img
+                                    src={item.game.imageUrl}
+                                    alt={item.game.title}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-white text-sm font-medium truncate">{item.game.title}</p>
+                                  <p className="text-gray-500 text-xs">{item.game.category}</p>
+                                </div>
+                                <span className="text-[#00ff87] text-sm font-semibold">{item.price.toLocaleString('fr-FR')} FCFA</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Action buttons - only for pending orders */}
+                          {isPending && (
+                            <div className="flex gap-3 pt-3 border-t border-white/5">
+                              <Button
+                                onClick={() => handleConfirmOrder(order.id, 'confirmed')}
+                                disabled={confirmingId === order.id}
+                                className="bg-[#00ff87] text-[#0f0f0f] hover:bg-[#00cc6a] font-bold cursor-pointer flex-1"
+                                size="lg"
+                              >
+                                {confirmingId === order.id ? (
+                                  <><RefreshCw className="mr-2 h-4 w-4 animate-spin" />Validation...</>
+                                ) : (
+                                  <><CheckCircle className="mr-2 h-4 w-4" />Confirmer le paiement - Debloquer les jeux</>
+                                )}
+                              </Button>
+                              <Button
+                                onClick={() => handleConfirmOrder(order.id, 'rejected')}
+                                disabled={confirmingId === order.id}
+                                variant="outline"
+                                className="border-red-500/30 text-red-400 hover:bg-red-500/10 font-semibold cursor-pointer"
+                                size="lg"
+                              >
+                                <XCircle className="mr-2 h-4 w-4" />Refuser
+                              </Button>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* Info Banner - Games tab */}
+        {activeTab === 'games' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mb-8 p-4 rounded-xl bg-[#7c3aed]/5 border border-[#7c3aed]/20"
+          >
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-[#7c3aed] flex-shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="text-[#7c3aed] font-medium mb-1">Comment configurer les liens torrent</p>
+                <p className="text-gray-400">
+                  <span className="text-purple-400 font-medium">Lien Magnet :</span> Commence par <code className="bg-[#0f0f0f] px-1.5 py-0.5 rounded text-purple-300 text-xs">magnet:?xt=urn:btih:...</code> - Ouvre directement le client torrent<br />
+                  <span className="text-green-400 font-medium">Fichier .torrent :</span> Lien vers un fichier <code className="bg-[#0f0f0f] px-1.5 py-0.5 rounded text-green-300 text-xs">.torrent</code> hébergé (ex: sur votre serveur ou un hébergeur)<br />
+                  <span className="text-orange-400 font-medium">Site Torrent :</span> Lien vers une page de téléchargement (1337x, ThePirateBay, etc.)
+                </p>
+              </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
 
-        {/* Games List */}
+        {/* Games List - Games tab */}
+        {activeTab === 'games' && (
+        <>
         {loading ? (
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
@@ -763,6 +1074,8 @@ export default function AdminPage() {
               );
             })}
           </div>
+        )}
+        </>
         )}
       </div>
     </div>

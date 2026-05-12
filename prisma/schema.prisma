@@ -58,6 +58,7 @@ model Order {
   total       Float
   status      String      @default("pending")
   phone       String
+  provider    String      @default("")
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   items       OrderItem[]
