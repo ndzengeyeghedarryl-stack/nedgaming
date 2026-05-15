@@ -18,21 +18,13 @@ const gameGradients: Record<string, string> = {
   'db-xenoverse-2.png': 'from-blue-800 via-orange-900 to-gray-900',
   'db-fighterz.png': 'from-orange-900 via-red-800 to-gray-900',
   'dbz-kakarot.png': 'from-yellow-800 via-blue-900 to-gray-900',
-  'db-breakers.png': 'from-purple-900 via-green-900 to-gray-900',
   'fifa-19.png': 'from-green-900 via-emerald-900 to-gray-900',
-  'fifa-20.png': 'from-green-800 via-teal-900 to-gray-900',
-  'fifa-21.png': 'from-emerald-900 via-green-800 to-gray-900',
-  'fifa-22.png': 'from-teal-900 via-green-900 to-gray-900',
-  'fifa-23.png': 'from-green-900 via-cyan-900 to-gray-900',
   'cod-mw3.png': 'from-orange-900 via-red-900 to-gray-900',
-  'cod-cold-war.png': 'from-gray-900 via-red-900 to-gray-900',
   'bf5.png': 'from-green-900 via-gray-800 to-gray-900',
   'bf2042.png': 'from-blue-900 via-gray-800 to-gray-900',
   'moh-ab.png': 'from-amber-900 via-gray-800 to-gray-900',
   'nfs-heat.png': 'from-red-900 via-orange-900 to-gray-900',
-  'nfs-unbound.png': 'from-purple-900 via-yellow-800 to-gray-900',
   'forza-horizon-5.png': 'from-blue-900 via-orange-800 to-gray-900',
-  'f1-23.png': 'from-red-900 via-blue-900 to-gray-900',
   'acc.png': 'from-blue-800 via-gray-800 to-gray-900',
 };
 
@@ -82,7 +74,7 @@ export default function HomePage() {
   ];
 
   const stats = [
-    { icon: Gamepad2, label: 'Jeux disponibles', value: '25+' },
+    { icon: Gamepad2, label: 'Jeux disponibles', value: '17+' },
     { icon: Users, label: 'Clients satisfaits', value: '500+' },
     { icon: Trophy, label: 'Prix compétitifs', value: 'FCFA' },
     { icon: Zap, label: 'Livraison instantanée', value: '100%' },
