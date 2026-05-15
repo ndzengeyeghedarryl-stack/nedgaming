@@ -70,3 +70,27 @@ Stage Summary:
 - All games have AI-generated cover art images
 - Admin order confirmation system already in place
 - Site running on port 3000
+
+---
+Task ID: 1
+Agent: Main Agent
+Task: Télécharger les vraies images officielles des jeux depuis Steam et mettre à jour le site
+
+Work Log:
+- Supprimé les anciennes images placeholder de /public/games/
+- Téléchargé les 17 images officielles des jeux depuis le CDN Steam (capsule_616x353.jpg)
+- Sources: Steam Store CDN (cdn.akamai.steamstatic.com) - images officielles de chaque jeu
+- Jeux couverts: Naruto Storm 1-4, Storm Revolution, DB Xenoverse 1-2, DB FighterZ, DBZ Kakarot, FIFA 19, COD MW3, Battlefield V, Battlefield 2042, Medal of Honor AB, NFS Heat, Forza Horizon 5, Assetto Corsa Competizione
+- Mis à jour l'email dans Footer.tsx: contact@nedgaming.ga → ndzengeyeghedarryl@gmail.com
+- Supprimé l'ancienne base de données et recréé avec prisma db push
+- Reseed de la base: 17 jeux, tous à 3500 FCFA
+- Retiré output: "standalone" de next.config.ts pour stabilité du serveur
+- Rebuild du projet Next.js
+- Vérifié que le serveur fonctionne (homepage 200, images 200, API retourne 17 jeux à 3500 FCFA)
+
+Stage Summary:
+- 17 vraies images officielles Steam en place dans /public/games/
+- Tous les prix à 3500 FCFA dans la base de données
+- Email ndzengeyeghedarryl@gmail.com dans le Footer
+- Script start.sh créé pour lancer le serveur facilement
+- Problème connu: le serveur s'arrête après quelques secondes dans cet environnement
