@@ -17,6 +17,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 export default function Home() {
   const { page, initFromStorage } = useStore();
+  // NedGaming - PC Game Store
 
   useEffect(() => {
     initFromStorage();
