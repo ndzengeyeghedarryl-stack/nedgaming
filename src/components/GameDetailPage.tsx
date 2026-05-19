@@ -4,7 +4,7 @@ import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Star, ShoppingCart, ArrowLeft, Shield, Clock, HardDrive, Magnet, Download, CheckCircle, ShieldCheck, Copy, Info, ExternalLink, Monitor, Cpu, MemoryStick, Gpu, HardDriveUpload, Layers } from 'lucide-react';
+import { Star, ShoppingCart, ArrowLeft, Shield, Clock, HardDrive, Magnet, Download, CheckCircle, ShieldCheck, Copy, Info, ExternalLink, Monitor, Cpu, MemoryStick, Gpu, HardDriveUpload, Layers, AlertOctagon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
@@ -527,6 +527,29 @@ export default function GameDetailPage() {
                       <TypeIcon className={`h-4 w-4 ${dlType.color}`} />
                       <span className="text-xs text-gray-400">Après achat, téléchargement via</span>
                       <span className={`text-xs font-medium ${dlType.color}`}>{dlType.name}</span>
+                    </div>
+
+                    {/* uTorrent Notice */}
+                    <div className="p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/20">
+                      <div className="flex items-start gap-2">
+                        <AlertOctagon className="h-4 w-4 text-cyan-400 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-cyan-400 text-xs font-semibold mb-0.5">uTorrent requis</p>
+                          <p className="text-gray-400 text-[11px]">
+                            Le téléchargement se fait via uTorrent. Installez-le pour que le jeu se télécharge automatiquement après achat.
+                          </p>
+                          <a
+                            href="https://www.utorrent.com/downloads/win"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 mt-1 text-cyan-400 hover:text-cyan-300 text-[11px] font-medium transition-colors"
+                          >
+                            <Download className="h-3 w-3" />
+                            Télécharger uTorrent
+                            <ExternalLink className="h-2.5 w-2.5" />
+                          </a>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}

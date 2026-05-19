@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Phone, CreditCard, CheckCircle, Loader2, ShieldCheck, AlertCircle, Copy } from 'lucide-react';
+import { ArrowLeft, Phone, CreditCard, CheckCircle, Loader2, ShieldCheck, AlertCircle, Copy, Download, ExternalLink, AlertOctagon } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -117,6 +117,27 @@ export default function CheckoutPage() {
           <p className="text-gray-400">
             Votre commande a été enregistrée. L'administrateur doit vérifier votre paiement Mobile Money avant de débloquer l'accès au téléchargement. Vous recevrez l'accès dès que le paiement sera confirmé.
           </p>
+          <div className="p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/20 text-left">
+            <div className="flex items-start gap-2">
+              <AlertOctagon className="h-4 w-4 text-cyan-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-cyan-400 text-sm font-semibold mb-0.5">uTorrent requis pour le téléchargement</p>
+                <p className="text-gray-400 text-xs">
+                  Assurez-vous d'avoir <span className="text-white font-medium">uTorrent</span> installé sur votre PC. Le lien torrent s'ouvrira automatiquement dans uTorrent et le jeu se téléchargera tout seul après confirmation.
+                </p>
+                <a
+                  href="https://www.utorrent.com/downloads/win"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 mt-1.5 text-cyan-400 hover:text-cyan-300 text-xs font-medium transition-colors"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Télécharger uTorrent gratuitement
+                  <ExternalLink className="h-2.5 w-2.5" />
+                </a>
+              </div>
+            </div>
+          </div>
           <div className="space-y-3">
             <Button
               onClick={() => setPage('orders')}
@@ -197,6 +218,36 @@ export default function CheckoutPage() {
                 3. Sélectionnez votre opérateur<br />
                 4. Validez le paiement
               </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* uTorrent Notice */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="mb-6 p-4 rounded-xl bg-cyan-500/5 border border-cyan-500/20"
+        >
+          <div className="flex items-start gap-3">
+            <AlertOctagon className="h-5 w-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="text-cyan-400 font-semibold mb-1">uTorrent requis pour le téléchargement</p>
+              <p className="text-gray-400">
+                Après confirmation de votre paiement, le téléchargement se fait via <span className="text-white font-medium">uTorrent</span>. 
+                Assurez-vous d'avoir uTorrent installé sur votre PC avant d'acheter. Le lien torrent s'ouvrira automatiquement dans uTorrent 
+                et le jeu se téléchargera tout seul.
+              </p>
+              <a
+                href="https://www.utorrent.com/downloads/win"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 mt-2 text-cyan-400 hover:text-cyan-300 text-sm font-medium transition-colors"
+              >
+                <Download className="h-4 w-4" />
+                Télécharger uTorrent gratuitement
+                <ExternalLink className="h-3 w-3" />
+              </a>
             </div>
           </div>
         </motion.div>

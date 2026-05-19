@@ -4,7 +4,7 @@ import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Package, Clock, CheckCircle, ShoppingBag, HardDrive, ExternalLink, ShieldCheck, Magnet, Download, Copy, Info, XCircle, AlertTriangle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Package, Clock, CheckCircle, ShoppingBag, HardDrive, ExternalLink, ShieldCheck, Magnet, Download, Copy, Info, XCircle, AlertTriangle, RefreshCw, AlertOctagon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -256,6 +256,34 @@ export default function OrdersPage() {
                 <p className="text-gray-500 text-sm">{uniquePurchasedGames.length} jeu(x) debloqué(s) - Cliquez pour télécharger via torrent</p>
               </div>
             </div>
+
+            {/* uTorrent Notice */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 rounded-xl bg-cyan-500/5 border border-cyan-500/20"
+            >
+              <div className="flex items-start gap-3">
+                <AlertOctagon className="h-5 w-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-cyan-400 font-semibold mb-1">uTorrent requis pour le téléchargement</p>
+                  <p className="text-gray-400 text-sm">
+                    Pour télécharger vos jeux automatiquement, vous devez avoir <span className="text-white font-medium">uTorrent</span> installé sur votre PC. 
+                    Quand vous cliquez sur le bouton de téléchargement, le lien torrent s'ouvrira directement dans uTorrent et le jeu se téléchargera automatiquement.
+                  </p>
+                  <a
+                    href="https://www.utorrent.com/downloads/win"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 mt-2 text-cyan-400 hover:text-cyan-300 text-sm font-medium transition-colors"
+                  >
+                    <Download className="h-4 w-4" />
+                    Télécharger uTorrent gratuitement
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
+            </motion.div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {uniquePurchasedGames.map((item, i) => {
