@@ -1,9 +1,7 @@
 #!/bin/bash
+cd /home/z/my-project
 while true; do
-  cd /home/z/my-project
-  echo "[$(date)] Starting server..."
-  node .next/standalone/server.js -H 0.0.0.0 -p 3000 2>&1
-  EXIT_CODE=$?
-  echo "[$(date)] Server exited with code $EXIT_CODE"
-  sleep 2
+  npx next dev -p 3000 -H 0.0.0.0 2>&1 | tee -a dev.log
+  echo "Server crashed at $(date), restarting in 3s..." >> dev.log
+  sleep 3
 done
