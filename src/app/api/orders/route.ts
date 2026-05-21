@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { gamesData } from '../games/route';
-import { memoryOrders, addMemoryOrder, type MemoryOrder, type MemoryOrderItem } from '@/lib/memoryStore';
+import { memoryOrders, memoryUsers, addMemoryOrder, type MemoryOrder, type MemoryOrderItem } from '@/lib/memoryStore';
 
 // Helper to find game data from static fallback
 function findGameById(gameId: string) {
@@ -187,21 +187,17 @@ export async function POST(request: NextRequest) {
   }
 
   // Memory fallback
-  // Get user info from memory users
+  // Get user info from shared memory store
   let userName = 'Client';
   let userEmail = '';
   let userPhone: string | null = null;
 
-  try {
-    const { getMemoryUsers } = await import('../auth/register/route');
-    const memUsers = getMemoryUsers();
-    const memUser = memUsers.find(u => u.id === userId);
-    if (memUser) {
-      userName = memUser.name;
-      userEmail = memUser.email;
-      userPhone = memUser.phone;
-    }
-  } catch { /* ignore */ }
+  const memUser = memoryUsers.find(u => u.id === userId);
+  if (memUser) {
+    userName = memUser.name;
+    userEmail = memUser.email;
+    userPhone = memUser.phone;
+  }
 
   const orderId = `order-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 

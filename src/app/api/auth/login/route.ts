@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { memoryUsers } from '@/lib/memoryStore';
 
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -21,32 +22,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await db.user.findUnique({
-      where: { email },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Email ou mot de passe incorrect' },
-        { status: 401 }
-      );
-    }
-
     const hashedPassword = await hashPassword(password);
 
-    if (user.password !== hashedPassword) {
-      return NextResponse.json(
-        { error: 'Email ou mot de passe incorrect' },
-        { status: 401 }
-      );
+    // Try DB first
+    let dbAvailable = false;
+    try {
+      await db.user.count();
+      dbAvailable = true;
+    } catch {
+      dbAvailable = false;
     }
 
-    return NextResponse.json({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      phone: user.phone,
-    });
+    if (dbAvailable) {
+      try {
+        const user = await db.user.findUnique({
+          where: { email },
+        });
+
+        if (user && user.password === hashedPassword) {
+          return NextResponse.json({
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            phone: user.phone,
+          });
+        }
+
+        // If not found in DB, try memory
+      } catch (error) {
+        console.error('Login DB error, trying memory:', error);
+      }
+    }
+
+    // Memory fallback
+    const memUser = memoryUsers.find(
+      u => u.email.toLowerCase() === email.toLowerCase() && u.password === hashedPassword
+    );
+
+    if (memUser) {
+      return NextResponse.json({
+        id: memUser.id,
+        email: memUser.email,
+        name: memUser.name,
+        phone: memUser.phone,
+      });
+    }
+
+    return NextResponse.json(
+      { error: 'Email ou mot de passe incorrect' },
+      { status: 401 }
+    );
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(

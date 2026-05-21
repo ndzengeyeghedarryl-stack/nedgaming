@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { memoryUsers, addMemoryUser } from '@/lib/memoryStore';
 
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -7,22 +8,6 @@ async function hashPassword(password: string): Promise<string> {
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-// In-memory users store (fallback for Vercel ephemeral DB)
-interface MemoryUser {
-  id: string;
-  name: string;
-  email: string;
-  phone: string | null;
-  password: string;
-  createdAt: string;
-}
-
-const memoryUsers: MemoryUser[] = [];
-
-export function getMemoryUsers(): MemoryUser[] {
-  return memoryUsers;
 }
 
 export async function POST(request: NextRequest) {
@@ -79,8 +64,8 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Also store in memory as backup
-      memoryUsers.push({
+      // Also store in shared memory as backup
+      addMemoryUser({
         id: user.id,
         name: user.name,
         email: user.email,
@@ -100,7 +85,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Memory fallback
+  // Memory fallback - use shared memory store
   // Check if email already exists
   const existingMemUser = memoryUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
   if (existingMemUser) {
@@ -111,7 +96,7 @@ export async function POST(request: NextRequest) {
   }
 
   const userId = `user-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const newUser: MemoryUser = {
+  const newUser = {
     id: userId,
     name,
     email,
@@ -120,7 +105,7 @@ export async function POST(request: NextRequest) {
     createdAt: new Date().toISOString(),
   };
 
-  memoryUsers.push(newUser);
+  addMemoryUser(newUser);
 
   return NextResponse.json({
     id: newUser.id,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { memoryOrders, type MemoryOrder } from '../orders/route';
+import { memoryOrders, updateMemoryOrderStatus } from '@/lib/memoryStore';
 
 // GET all orders (admin only)
 export async function GET(request: NextRequest) {

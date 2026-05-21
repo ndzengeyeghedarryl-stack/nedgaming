@@ -1,28 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-
-// In-memory users store (synced from register route)
-interface MemoryUser {
-  id: string;
-  name: string;
-  email: string;
-  phone: string | null;
-  createdAt: string;
-}
-
-// Shared memory users array
-const memoryUsers: MemoryUser[] = [];
-
-export function getMemoryUsers(): MemoryUser[] {
-  return memoryUsers;
-}
-
-export function addMemoryUser(user: MemoryUser): void {
-  // Avoid duplicates
-  if (!memoryUsers.find(u => u.id === user.id)) {
-    memoryUsers.push(user);
-  }
-}
+import { memoryUsers } from '@/lib/memoryStore';
 
 // GET all users (admin only)
 export async function GET(request: NextRequest) {
@@ -52,7 +30,16 @@ export async function GET(request: NextRequest) {
       const memOnlyUsers = memoryUsers.filter(u => !dbUserIds.has(u.id));
 
       if (memOnlyUsers.length > 0) {
-        return NextResponse.json([...memOnlyUsers, ...users]);
+        return NextResponse.json([
+          ...memOnlyUsers.map(u => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            phone: u.phone,
+            createdAt: u.createdAt,
+          })),
+          ...users,
+        ]);
       }
 
       return NextResponse.json(users);
@@ -61,6 +48,14 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Memory fallback
-  return NextResponse.json(memoryUsers);
+  // Memory fallback - use shared memory store
+  return NextResponse.json(
+    memoryUsers.map(u => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      phone: u.phone,
+      createdAt: u.createdAt,
+    }))
+  );
 }

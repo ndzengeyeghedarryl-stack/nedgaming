@@ -1114,6 +1114,7 @@ export default function AdminPage() {
           </div>
         )}
         </>
+        )}
 
         {/* Users Tab */}
         {activeTab === 'users' && (
@@ -1215,8 +1216,6 @@ export default function AdminPage() {
               </div>
             )}
           </motion.div>
-        )}
-
         )}
       </div>
     </div>
