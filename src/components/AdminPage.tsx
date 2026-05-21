@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Settings, ExternalLink, Save, Link2, HardDrive, Tag, RefreshCw, CheckCircle, AlertCircle, Shield, Magnet, Download, Copy, Info, Users, LogOut, UserCircle, Monitor, Cpu, MemoryStick, Gpu, HardDriveUpload, Layers, ChevronDown, ChevronUp, Package, XCircle, Clock, Phone, CreditCard, DollarSign } from 'lucide-react';
+import { ArrowLeft, Settings, ExternalLink, Save, Link2, HardDrive, Tag, RefreshCw, CheckCircle, AlertCircle, Shield, Magnet, Download, Copy, Info, Users, LogOut, UserCircle, Monitor, Cpu, MemoryStick, Gpu, HardDriveUpload, Layers, ChevronDown, ChevronUp, Package, XCircle, Clock, Phone, CreditCard, DollarSign, Mail, Calendar, Trash2, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
@@ -46,7 +46,6 @@ interface AdminAccount {
 
 const ADMIN_ACCOUNTS: AdminAccount[] = [
   { name: 'NED', password: 'hope2016', role: 'Administrateur principal' },
-  { name: 'Guylione', password: 'aye16pt10', role: 'Administrateur' },
 ];
 
 function getDownloadType(link: string): { name: string; color: string; bgColor: string; icon: typeof Magnet } {
@@ -107,17 +106,21 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentAdmin, setCurrentAdmin] = useState<AdminAccount | null>(null);
   const [showSysReqs, setShowSysReqs] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'games' | 'orders'>('orders');
+  const [activeTab, setActiveTab] = useState<'games' | 'orders' | 'users'>('orders');
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [usersList, setUsersList] = useState<{ id: string; name: string; email: string; phone: string | null; createdAt: string }[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchGames();
       fetchOrders();
+      fetchUsers();
     } else {
       setLoading(false);
       setOrdersLoading(false);
+      setUsersLoading(false);
     }
   }, [isAuthenticated]);
 
@@ -156,6 +159,25 @@ export default function AdminPage() {
       });
     } finally {
       setOrdersLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      setUsersLoading(true);
+      const res = await fetch('/api/admin/users');
+      if (res.ok) {
+        const data = await res.json();
+        setUsersList(data);
+      }
+    } catch {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les utilisateurs',
+        variant: 'destructive',
+      });
+    } finally {
+      setUsersLoading(false);
     }
   };
 
@@ -451,7 +473,7 @@ export default function AdminPage() {
                 <span className="text-[10px] text-[#7c3aed]/60">({currentAdmin?.role})</span>
               </div>
               <Button
-                onClick={() => { fetchGames(); fetchOrders(); }}
+                onClick={() => { fetchGames(); fetchOrders(); fetchUsers(); }}
                 variant="outline"
                 className="border-[#7c3aed]/30 text-[#7c3aed] hover:bg-[#7c3aed]/10 cursor-pointer"
               >
@@ -497,6 +519,22 @@ export default function AdminPage() {
             >
               <Settings className="h-4 w-4" />
               Gestion des jeux
+            </button>
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 ${
+                activeTab === 'users'
+                  ? 'bg-[#7c3aed] text-white'
+                  : 'bg-[#1a1a2e]/50 text-gray-400 hover:text-white hover:bg-[#1a1a2e]'
+              }`}
+            >
+              <Users className="h-4 w-4" />
+              Utilisateurs
+              {usersList.length > 0 && (
+                <span className="bg-[#7c3aed]/30 text-[#7c3aed] text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  {usersList.length}
+                </span>
+              )}
             </button>
           </div>
         </motion.div>
@@ -1076,6 +1114,109 @@ export default function AdminPage() {
           </div>
         )}
         </>
+
+        {/* Users Tab */}
+        {activeTab === 'users' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            {/* Stats - Users */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+              <Card className="bg-[#1a1a2e]/80 border-[#7c3aed]/20">
+                <CardContent className="p-4 text-center">
+                  <p className="text-2xl font-bold text-[#7c3aed]">{usersList.length}</p>
+                  <p className="text-gray-500 text-xs">Total utilisateurs</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-[#1a1a2e]/80 border-[#00ff87]/20">
+                <CardContent className="p-4 text-center">
+                  <p className="text-2xl font-bold text-[#00ff87]">{usersList.filter(u => u.phone).length}</p>
+                  <p className="text-gray-500 text-xs">Avec téléphone</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-[#1a1a2e]/80 border-white/5">
+                <CardContent className="p-4 text-center">
+                  <p className="text-2xl font-bold text-white">{usersList.length > 0 ? new Date(usersList[usersList.length - 1].createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '-'}</p>
+                  <p className="text-gray-500 text-xs">Dernière inscription</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-[#1a1a2e]/80 border-white/5">
+                <CardContent className="p-4 text-center">
+                  <p className="text-2xl font-bold text-cyan-400">{usersList.filter(u => { const d = new Date(u.createdAt); const now = new Date(); const diff = now.getTime() - d.getTime(); return diff < 7 * 24 * 60 * 60 * 1000; }).length}</p>
+                  <p className="text-gray-500 text-xs">Cette semaine</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {usersLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-24 rounded-xl bg-[#1a1a2e]/50 animate-pulse" />
+                ))}
+              </div>
+            ) : usersList.length === 0 ? (
+              <div className="text-center py-20 space-y-4">
+                <div className="p-6 rounded-full bg-[#1a1a2e]/50 border border-white/5 inline-block">
+                  <Users className="h-16 w-16 text-gray-500" />
+                </div>
+                <h2 className="text-2xl font-bold text-white">Aucun utilisateur inscrit</h2>
+                <p className="text-gray-400">Les nouveaux utilisateurs apparaitront ici</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {/* Table header */}
+                <div className="hidden sm:grid grid-cols-12 gap-3 px-4 py-2 text-gray-500 text-xs font-semibold uppercase tracking-wider">
+                  <div className="col-span-1">#</div>
+                  <div className="col-span-3">Nom</div>
+                  <div className="col-span-3">Email</div>
+                  <div className="col-span-2">Téléphone</div>
+                  <div className="col-span-3">Date d'inscription</div>
+                </div>
+                {usersList.map((u, i) => (
+                  <motion.div
+                    key={u.id}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                  >
+                    <Card className="bg-[#1a1a2e]/80 border-white/5 hover:border-white/10 transition-colors">
+                      <CardContent className="p-4">
+                        <div className="flex flex-col sm:grid sm:grid-cols-12 gap-2 sm:gap-3 items-center">
+                          <div className="col-span-1 hidden sm:flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full bg-[#7c3aed]/10 border border-[#7c3aed]/20 flex items-center justify-center">
+                              <span className="text-[#7c3aed] text-xs font-bold">{i + 1}</span>
+                            </div>
+                          </div>
+                          <div className="col-span-3 flex items-center gap-2">
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#00ff87]/20 to-[#7c3aed]/20 border border-white/10 flex items-center justify-center flex-shrink-0">
+                              <UserCircle className="h-5 w-5 text-[#00ff87]" />
+                            </div>
+                            <span className="text-white font-medium text-sm">{u.name}</span>
+                          </div>
+                          <div className="col-span-3 flex items-center gap-2">
+                            <Mail className="h-3.5 w-3.5 text-gray-500" />
+                            <span className="text-gray-300 text-sm truncate">{u.email}</span>
+                          </div>
+                          <div className="col-span-2 flex items-center gap-2">
+                            <Phone className="h-3.5 w-3.5 text-gray-500" />
+                            <span className="text-gray-300 text-sm">{u.phone || <span className="text-gray-600 italic">Non renseigné</span>}</span>
+                          </div>
+                          <div className="col-span-3 flex items-center gap-2">
+                            <Calendar className="h-3.5 w-3.5 text-gray-500" />
+                            <span className="text-gray-400 text-sm">{new Date(u.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+
         )}
       </div>
     </div>

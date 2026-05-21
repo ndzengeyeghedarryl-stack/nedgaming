@@ -1,41 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { gamesData } from '../games/route';
-
-// ===== IN-MEMORY ORDER STORE (fallback for Vercel ephemeral DB) =====
-interface MemoryOrderItem {
-  id: string;
-  gameId: string;
-  price: number;
-  game: {
-    id: string;
-    title: string;
-    imageUrl: string;
-    category: string;
-    price: number;
-    downloadLink: string;
-    fileSize: string;
-  };
-}
-
-interface MemoryOrder {
-  id: string;
-  userId: string;
-  total: number;
-  status: string;
-  phone: string;
-  provider: string;
-  createdAt: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string | null;
-  };
-  items: MemoryOrderItem[];
-}
-
-const memoryOrders: MemoryOrder[] = [];
+import { memoryOrders, addMemoryOrder, type MemoryOrder, type MemoryOrderItem } from '@/lib/memoryStore';
 
 // Helper to find game data from static fallback
 function findGameById(gameId: string) {
@@ -212,7 +178,7 @@ export async function POST(request: NextRequest) {
         }
       } catch { /* ignore */ }
 
-      memoryOrders.push(memOrder);
+      addMemoryOrder(memOrder);
 
       return NextResponse.json(order);
     } catch (error) {
