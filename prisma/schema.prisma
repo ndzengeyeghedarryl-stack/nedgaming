@@ -3,8 +3,10 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider    = "postgresql"
+  url         = env("DATABASE_URL")
+  directUrl   = env("DIRECT_URL")
+  relationMode = "prisma"
 }
 
 model User {
@@ -16,6 +18,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   orders    Order[]
+
+  @@index([email])
 }
 
 model Game {
@@ -49,6 +53,9 @@ model Game {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   orderItems   OrderItem[]
+
+  @@index([category])
+  @@index([featured])
 }
 
 model Order {
@@ -62,6 +69,9 @@ model Order {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   items       OrderItem[]
+
+  @@index([userId])
+  @@index([status])
 }
 
 model OrderItem {
@@ -72,4 +82,7 @@ model OrderItem {
   game      Game     @relation(fields: [gameId], references: [id])
   price     Float
   createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([gameId])
 }

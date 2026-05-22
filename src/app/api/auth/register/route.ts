@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { memoryUsers, addMemoryUser } from '@/lib/memoryStore';
 
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -30,87 +29,41 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const hashedPassword = await hashPassword(password);
-
-  // Try DB first
-  let dbAvailable = false;
   try {
-    await db.user.count();
-    dbAvailable = true;
-  } catch {
-    dbAvailable = false;
-  }
+    // Check if email already exists
+    const existingUser = await db.user.findUnique({
+      where: { email },
+    });
 
-  if (dbAvailable) {
-    try {
-      // Check if email already exists
-      const existingUser = await db.user.findUnique({
-        where: { email },
-      });
-
-      if (existingUser) {
-        return NextResponse.json(
-          { error: 'Un compte avec cet email existe déjà' },
-          { status: 400 }
-        );
-      }
-
-      const user = await db.user.create({
-        data: {
-          name,
-          email,
-          password: hashedPassword,
-          phone: phone || null,
-        },
-      });
-
-      // Also store in shared memory as backup
-      addMemoryUser({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        password: hashedPassword,
-        createdAt: new Date().toISOString(),
-      });
-
-      return NextResponse.json({
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        phone: user.phone,
-      });
-    } catch (error) {
-      console.error('Register DB error, using memory:', error);
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'Un compte avec cet email existe déjà' },
+        { status: 400 }
+      );
     }
-  }
 
-  // Memory fallback - use shared memory store
-  // Check if email already exists
-  const existingMemUser = memoryUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-  if (existingMemUser) {
+    const hashedPassword = await hashPassword(password);
+
+    const user = await db.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        phone: phone || null,
+      },
+    });
+
+    return NextResponse.json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+    });
+  } catch (error) {
+    console.error('Register error:', error);
     return NextResponse.json(
-      { error: 'Un compte avec cet email existe déjà' },
-      { status: 400 }
+      { error: 'Erreur lors de l\'inscription. Veuillez réessayer.' },
+      { status: 500 }
     );
   }
-
-  const userId = `user-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const newUser = {
-    id: userId,
-    name,
-    email,
-    phone: phone || null,
-    password: hashedPassword,
-    createdAt: new Date().toISOString(),
-  };
-
-  addMemoryUser(newUser);
-
-  return NextResponse.json({
-    id: newUser.id,
-    email: newUser.email,
-    name: newUser.name,
-    phone: newUser.phone,
-  });
 }

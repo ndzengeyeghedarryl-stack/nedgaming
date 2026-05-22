@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { memoryUsers } from '@/lib/memoryStore';
 
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -24,47 +23,16 @@ export async function POST(request: NextRequest) {
 
     const hashedPassword = await hashPassword(password);
 
-    // Try DB first
-    let dbAvailable = false;
-    try {
-      await db.user.count();
-      dbAvailable = true;
-    } catch {
-      dbAvailable = false;
-    }
+    const user = await db.user.findUnique({
+      where: { email },
+    });
 
-    if (dbAvailable) {
-      try {
-        const user = await db.user.findUnique({
-          where: { email },
-        });
-
-        if (user && user.password === hashedPassword) {
-          return NextResponse.json({
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            phone: user.phone,
-          });
-        }
-
-        // If not found in DB, try memory
-      } catch (error) {
-        console.error('Login DB error, trying memory:', error);
-      }
-    }
-
-    // Memory fallback
-    const memUser = memoryUsers.find(
-      u => u.email.toLowerCase() === email.toLowerCase() && u.password === hashedPassword
-    );
-
-    if (memUser) {
+    if (user && user.password === hashedPassword) {
       return NextResponse.json({
-        id: memUser.id,
-        email: memUser.email,
-        name: memUser.name,
-        phone: memUser.phone,
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
       });
     }
 
@@ -75,7 +43,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la connexion' },
+      { error: 'Erreur lors de la connexion. Veuillez réessayer.' },
       { status: 500 }
     );
   }

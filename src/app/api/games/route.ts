@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-// ===== GAMES DATA (used for auto-seed on Vercel + fallback) =====
+// ===== GAMES DATA (used for auto-seed) =====
 export const gamesData = [
   {
     title: 'Naruto: Ultimate Ninja Storm',
@@ -489,33 +489,13 @@ async function ensureGamesSeeded() {
   }
 }
 
-function filterStaticGames(category: string | null, search: string | null) {
-  let filtered = gamesData.map((g, i) => ({
-    ...g,
-    id: `static-${i}`,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }));
-
-  if (category && category !== 'Tous') {
-    filtered = filtered.filter((g) => g.category === category);
-  }
-
-  if (search) {
-    const searchLower = search.toLowerCase();
-    filtered = filtered.filter((g) => g.title.toLowerCase().includes(searchLower));
-  }
-
-  return filtered;
-}
-
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get('category');
   const search = searchParams.get('search');
 
   try {
-    // Auto-seed if DB is empty (fixes Vercel ephemeral filesystem)
+    // Auto-seed if DB is empty
     await ensureGamesSeeded();
 
     const where: Record<string, unknown> = {};
@@ -538,7 +518,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(games);
   } catch (error) {
     console.error('Get games error:', error);
-    // Fallback: return filtered static data if DB fails completely
-    return NextResponse.json(filterStaticGames(category, search));
+    return NextResponse.json(
+      { error: 'Erreur lors du chargement des jeux' },
+      { status: 500 }
+    );
   }
 }

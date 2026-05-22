@@ -1,5 +1,6 @@
-// ===== SHARED IN-MEMORY STORE (for Vercel ephemeral DB fallback) =====
-// This file is imported by multiple API routes to share state
+// ===== DEPRECATED: Memory store is no longer used =====
+// All data is now persisted in PostgreSQL via Supabase
+// This file is kept for backward compatibility but should not be imported
 
 export interface MemoryUser {
   id: string;
@@ -40,30 +41,4 @@ export interface MemoryOrder {
     phone: string | null;
   };
   items: MemoryOrderItem[];
-}
-
-// Shared in-memory stores
-export const memoryUsers: MemoryUser[] = [];
-export const memoryOrders: MemoryOrder[] = [];
-
-// Helper to add a user (avoids duplicates)
-export function addMemoryUser(user: MemoryUser): void {
-  if (!memoryUsers.find(u => u.id === user.id)) {
-    memoryUsers.push(user);
-  }
-}
-
-// Helper to add an order (avoids duplicates)
-export function addMemoryOrder(order: MemoryOrder): void {
-  if (!memoryOrders.find(o => o.id === order.id)) {
-    memoryOrders.push(order);
-  }
-}
-
-// Helper to update order status in memory
-export function updateMemoryOrderStatus(orderId: string, status: string): void {
-  const order = memoryOrders.find(o => o.id === orderId);
-  if (order) {
-    order.status = status;
-  }
 }
