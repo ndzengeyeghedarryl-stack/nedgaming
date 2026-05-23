@@ -11,8 +11,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
 const providers = [
-  { id: 'airtel', name: 'Airtel Money', color: 'from-red-500/20 to-red-900/20 border-red-500/30', icon: '💰', number: '+241 76 52 00 18' },
+  { id: 'mtn', name: 'MTN Mobile Money', color: 'from-yellow-500/20 to-yellow-900/20 border-yellow-500/30', icon: '📱', number: '+241 77 00 00 00' },
   { id: 'moov', name: 'Moov Money', color: 'from-blue-500/20 to-blue-900/20 border-blue-500/30', icon: '📲', number: '+241 66 86 98 05' },
+  { id: 'airtel', name: 'Airtel Money', color: 'from-red-500/20 to-red-900/20 border-red-500/30', icon: '💰', number: '+241 76 52 00 18' },
 ];
 
 export default function CheckoutPage() {
@@ -310,7 +311,7 @@ export default function CheckoutPage() {
 
                       <div className="space-y-2">
                         <Label className="text-gray-300">Votre opérateur Mobile Money</Label>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-3 gap-3">
                           {providers.map((provider) => (
                             <button
                               key={provider.id}

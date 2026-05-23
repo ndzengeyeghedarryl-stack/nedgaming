@@ -26,7 +26,7 @@ export default function Footer() {
             <ul className="space-y-3 text-sm text-gray-400">
               <li className="flex items-center gap-2">
                 <span className="text-yellow-400 text-base">📱</span>
-                <span>MTN Mobile Money</span>
+                <span>MTN Mobile Money : +241 77 00 00 00</span>
               </li>
               <li className="flex items-center gap-2">
                 <span className="text-blue-400 text-base">📲</span>
