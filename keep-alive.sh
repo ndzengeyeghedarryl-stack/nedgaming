@@ -1,7 +1,9 @@
 #!/bin/bash
 cd /home/z/my-project
+LOG="/tmp/nextjs-server.log"
+echo "Starting NedGaming keep-alive server..." > "$LOG"
 while true; do
-  npx next dev -p 3000 -H 0.0.0.0 2>&1 | tee -a dev.log
-  echo "Server crashed at $(date), restarting in 3s..." >> dev.log
-  sleep 3
+  node node_modules/.bin/next start -p 3000 >> "$LOG" 2>&1
+  echo "Server crashed at $(date). Restarting in 2s..." >> "$LOG"
+  sleep 2
 done

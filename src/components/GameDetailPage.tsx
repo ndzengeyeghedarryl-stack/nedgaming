@@ -27,6 +27,7 @@ const gameGradients: Record<string, string> = {
   'nfs-heat.png': 'from-red-900 via-orange-900 to-gray-900',
   'forza-horizon-5.png': 'from-blue-900 via-orange-800 to-gray-900',
   'acc.png': 'from-blue-800 via-gray-800 to-gray-900',
+  'db-sparking-zero.png': 'from-blue-900 via-orange-800 to-gray-900',
 };
 
 const categoryColors: Record<string, string> = {
